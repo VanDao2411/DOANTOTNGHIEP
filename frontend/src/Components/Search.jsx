@@ -1,170 +1,105 @@
-import React from 'react'
-// eslint-disable-next-line no-unused-vars
-import { motion } from "framer-motion";
-import { NavLink, useParams } from "react-router-dom";
-import Categorys from "./Categorys";
-const categories = [
-  { name: "Tất cả", slug: "" },
-  {
-    name: "Lớp 1",
-    slug: "lop-1",
-    subcategories: [
-      { title: "Thư viện đề thi" },
-      { name: "Đề thi giữa kì 1", slug: "de-thi-giua-ki-1" },
-      { name: "Đề thi học kì 1", slug: "de-thi-hoc-ki-1" },
-      { name: "Đề thi học kì 2", slug: "de-thi-hoc-ki-2" },
-      { name: "Đề thi giữa kì 2", slug: "de-thi-giua-ki-2" },
-      { name: "Đề thi giữa kì 2", slug: "de-thi-giua-ki-2" },
-      { title: "Trắc nghiệm" },
-      { name: "Toán", slug: "toan" },
-      { name: "Tiếng việt", slug: "tieng-viet" },
-      { name: "Tiếng anh", slug: "tieng-anh" },
-      { title: "Tài liệu giáo viên" },
-      { name: "Toán", slug: "toan" },
-      { name: "Tiếng việt", slug: "tieng-viet" },
-      { name: "Tiếng anh", slug: "tieng-anh" },
-      { title: "Bài tập hằng ngày" },
-      { name: "Toán", slug: "toan" },
-      { name: "Tiếng việt", slug: "tieng-viet" },
-      { name: "Tiếng anh", slgp: "tieng-anh" },
-    ],
-  },
-  { name: "Lớp 2", slug: "lop-2" },
-  { name: "Lớp 3", slug: "lop-3" },
-  { name: "Lớp 4", slug: "lop-4" },
-  { name: "Lớp 5", slug: "lop-5" },
-  { name: "Lớp 6", slug: "lop-6" },
-  { name: "Lớp 7", slug: "lop-7" },
-  { name: "Lớp 8", slug: "lop-8" },
-  { name: "Lớp 9", slug: "lop-9" },
-  { name: "Lớp 10", slug: "lop-10" },
-  { name: "Lớp 11", slug: "lop-11" },
-  { name: "Lớp 12", slug: "lop-12" },
-  { name: "Thi Chuyển Cấp", slug: "th-chuyen-cap" },
-];
+import React, { useState, useEffect } from "react";
+import apiProducts from "../apis/apiProducts.json";
+import { FaSearch } from "react-icons/fa";
 
-const activeStyle = `
-  relative text-blue-500 after:content-[''] after:absolute after:left-0 after:bottom-[-16px] 
-  after:w-full after:h-[2px] after:bg-blue-500 after:scale-x-100
-`;
-
-const notActiveStyle = `
-  relative hover:text-blue-200 after:content-[''] after:absolute after:left-0 after:bottom-[-16px] 
-  after:w-full after:h-[2px] after:bg-blue-200 after:scale-x-0 after:origin-center 
-  after:transition-transform after:duration-300 hover:after:scale-x-100
-`;
 const Search = () => {
-  const { categorySlug } = useParams();
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+
+  // Tìm kiếm realtime khi nhập ký tự đầu tiên
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+    const filtered = apiProducts.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query.toLowerCase()) ||
+        (item.author && item.author.toLowerCase().includes(query.toLowerCase())) ||
+        (item.category && item.category.toLowerCase().includes(query.toLowerCase()))
+    );
+    setResults(filtered);
+  }, [query]);
+
+  // Giữ lại handleSearch để khi nhấn Enter không bị reload trang
+  const handleSearch = (e) => {
+    e.preventDefault();
+  };
+
   return (
-   <div className="">
-    <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.0 }}
-          className="w-full h-[140px] bg-white shadow-xl rounded-xl mt-10"
+    <div className="relative min-h-screen bg-[#f0f6ff] flex flex-col items-center py-10 px-2 overflow-hidden">
+      {/* Họa tiết trang trí góc trên trái */}
+      <div className="absolute left-0 top-0 w-60 h-60 bg-gradient-to-br from-[#60a5fa]/40 to-transparent rounded-full blur-2xl -z-10" />
+      {/* Họa tiết trang trí góc dưới phải */}
+      <div className="absolute right-0 bottom-0 w-72 h-72 bg-gradient-to-tl from-[#2563eb]/30 to-transparent rounded-full blur-2xl -z-10" />
+      {/* Họa tiết sóng nhẹ phía trên */}
+      <svg className="absolute top-0 left-0 w-full h-24 -z-10" viewBox="0 0 1440 320">
+        <path
+          fill="#2563eb"
+          fillOpacity="0.08"
+          d="M0,96L60,117.3C120,139,240,181,360,181.3C480,181,600,139,720,133.3C840,128,960,160,1080,181.3C1200,203,1320,213,1380,218.7L1440,224L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"
+        ></path>
+      </svg>
+
+      <form
+        className="w-full max-w-xl flex items-center gap-2 mb-8"
+        onSubmit={handleSearch}
+      >
+        <input
+          type="text"
+          className="flex-1 px-4 py-3 rounded-l-xl border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base bg-white"
+          placeholder="Tìm kiếm sách, tài liệu, tác giả, thể loại..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button
+          type="submit"
+          className="px-5 py-3 bg-gradient-to-r from-[#2563eb] to-[#60a5fa] text-white rounded-r-xl font-semibold flex items-center gap-2 hover:from-[#1d4ed8] hover:to-[#3b82f6] transition"
         >
-        <motion.h1 className="font-raleway font-bold tracking-widest text-center text-[35px]  text-gray-500">
-              Document Types
-            </motion.h1>
-          <div className="h-1 w-16 rounded-md bg-slate-200 m-auto mt-2"></div>
-          <div className="mt-5 ml-5">
-            <ul className="flex gap-4 font-raleway text-[20px]">
-              {categories.map((category, index) => {
-                const isActive = categorySlug
-                  ? category.slug === categorySlug ||
-                    (category.subcategories &&
-                      category.subcategories.some(
-                        (sub) => sub.slug === categorySlug
-                      ))
-                  : index === 0; // Chỉ active "Tất cả" nếu không có categorySlug
+          <FaSearch />
+          Tìm kiếm
+        </button>
+      </form>
 
-                return (
-                  <li
-                    key={index}
-                    className={`relative group ${
-                      index === 0 ? "hover:bg-gray-100" : ""
-                    }`}
-                  >
-                    <NavLink
-                      to={category.slug ? `/category/${category.slug}` : "/"}
-                      className={`${isActive ? activeStyle : notActiveStyle} ${
-                        index === 0 ? "hover:text-blue-600" : ""
-                      }`}
-                    >
-                      {category.name} |
-                    </NavLink>
+      {query && (
+        <div className="w-full max-w-5xl">
+          <h2 className="text-xl font-bold text-[#2563eb] mb-4">
+            Kết quả tìm kiếm: {results.length} mục
+          </h2>
+          {results.length === 0 ? (
+            <div className="text-gray-500 text-center py-10">
+              Không tìm thấy kết quả phù hợp.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {results.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-xl shadow p-4 flex flex-col hover:shadow-lg transition border border-blue-100"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="h-40 w-full object-cover rounded mb-3 bg-[#eaf1fb]"
+                  />
+                  <div className="font-bold text-lg text-[#2563eb] mb-1">{item.name}</div>
+                  <div className="text-sm text-blue-500 mb-2">{item.author}</div>
+                  <div className="flex flex-wrap gap-2 text-xs text-blue-700 mb-2">
+                    <span>Thể loại: {item.category}</span>
+                    <span>Lượt tải: {item.downloaded}</span>
+                  </div>
+                  <div className="line-clamp-2 text-blue-900 text-xs mb-2">{item.description}</div>
+                  <button className="mt-auto px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#60a5fa] text-white rounded hover:from-[#1d4ed8] hover:to-[#3b82f6] transition">
+                    Xem chi tiết
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
-                    {/* Dropdown menu */}
-                    {category.subcategories && (
-                      <div
-                        className="absolute left-0 top-full mt-2 w-[80rem] bg-white shadow-lg rounded-md py-4 z-10
-            opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform"
-                      >
-                        <div className="grid grid-cols-4 gap-6 p-4">
-                          {(() => {
-                            const groups = [];
-                            let currentGroup = null;
-
-                            category.subcategories.forEach((item) => {
-                              if (item.title) {
-                                currentGroup = { title: item.title, items: [] };
-                                groups.push(currentGroup);
-                              } else if (currentGroup) {
-                                currentGroup.items.push(item);
-                              }
-                            });
-
-                            return groups.map((group, groupIndex) => (
-                              <div
-                                key={`group-${groupIndex}`}
-                                className="space-y-2"
-                              >
-                                <h3 className="font-bold text-lg border-b pb-2 text-gray-700">
-                                  {group.title}
-                                </h3>
-                                <div className="space-y-1">
-                                  {group.items.map((item, itemIndex) => (
-                                    <NavLink
-                                      key={`item-${groupIndex}-${itemIndex}`}
-                                      to={`/category/${category.slug}/${item.slug}`}
-                                      className="block py-1 px-2 hover:bg-blue-50 rounded text-gray-600 hover:text-blue-600 transition-colors"
-                                    >
-                                      {item.name}
-                                    </NavLink>
-                                  ))}
-                                </div>
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.0 }}
-          className=""
-        >
-          <Categorys selectedCategory={categorySlug || "Tất cả"} />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.0 }}
-          className="flex justify-center m-5"
-        >
-          <button className="py-3 px-8 bg-[#e95834] rounded-md text-[20px] font-raleway text-white ">
-            Xem Thêm
-          </button>
-        </motion.div>
-   </div>
-  )
-}
-
-export default Search
+export default Search;

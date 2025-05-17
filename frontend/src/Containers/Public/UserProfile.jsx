@@ -1,107 +1,92 @@
-import React, { useState } from "react";
-
-import { AccountProfilr, DocumentsProfile, FinanceProfile } from "../../Components";
+import React, { useEffect } from "react";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useAvatar } from "../../Context/AvatarContext";
 
 export default function UserProfile() {
-  const [user, setUser] = useState({
-    fullName: "",
-    dob: "",
-    gender: "male",
-    address: "",
-    occupation: "",
-    email: "",
-    phone: "",
-    avatar:
-      "https://i.pinimg.com/236x/c6/5b/88/c65b884bfdd87ad7963f8e59c3e97667.jpg",
-  });
+  const { avatar, setAvatar } = useAvatar();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState("account");
-  const [message] = useState("");
-
-
+  // Điều hướng mặc định đến "account" nếu truy cập "/user-profile"
+  useEffect(() => {
+    if (location.pathname === "/user-profile") {
+      navigate("/user-profile/account", { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setUser({
-          ...user,
-          avatar: reader.result,
-        });
+        setAvatar(reader.result); // Cập nhật hình ảnh trong context
       };
       reader.readAsDataURL(file);
     }
   };
 
-
-
-
   return (
     <div className="flex min-h-screen bg-gray-100 mt-5 rounded-lg">
       {/* Sidebar */}
       <div className="w-1/5 bg-white p-6 shadow-md">
-        <div className="flex w-16 h-16 justify-center items-center mb-4 mx-auto relative">
+        <div className="flex flex-col items-center mb-4">
           <img
-            src={user.avatar}
-            className="w-full h-full rounded-full object-cover"
+            src={avatar}
             alt="Avatar"
+            className="w-24 h-24 rounded-full object-cover mb-2"
+          />
+          <label
+            htmlFor="avatar-upload"
+            className="cursor-pointer px-4 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+          >
+            Chọn ảnh
+          </label>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            className="hidden"
           />
         </div>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleAvatarChange}
-          className="block mx-auto mt-2"
-        />
+
         <ul className="space-y-4 mt-4">
-          <li
-            className={`cursor-pointer ${
-              activeTab === "account" ? "text-blue-600 font-semibold" : ""
-            }`}
-            onClick={() => setActiveTab("account")}
-          >
-            Quản lý tài khoản
+          <li>
+            <NavLink
+              to="/user-profile/account"
+              className={({ isActive }) =>
+                isActive ? "text-blue-600 font-semibold" : ""
+              }
+            >
+              Quản lý tài khoản
+            </NavLink>
           </li>
-          <li
-            className={`cursor-pointer ${
-              activeTab === "documents" ? "text-blue-600 font-semibold" : ""
-            }`}
-            onClick={() => setActiveTab("documents")}
-          >
-            Quản lý tài liệu
+          <li>
+            <NavLink
+              to="/user-profile/documents"
+              className={({ isActive }) =>
+                isActive ? "text-blue-600 font-semibold" : ""
+              }
+            >
+              Quản lý tài liệu
+            </NavLink>
           </li>
-          <li
-            className={`cursor-pointer ${
-              activeTab === "finance" ? "text-blue-600 font-semibold" : ""
-            }`}
-            onClick={() => setActiveTab("finance")}
-          >
-            Quản lý tài chính
+          <li>
+            <NavLink
+              to="/user-profile/finance"
+              className={({ isActive }) =>
+                isActive ? "text-blue-600 font-semibold" : ""
+              }
+            >
+              Quản lý tài chính
+            </NavLink>
           </li>
-          <li className="cursor-pointer">Setting</li>
-          <li className="cursor-pointer">Thông báo</li>
-          <li className="cursor-pointer">Logout</li>
         </ul>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 p-6">
-        {message && (
-          <div className="bg-green-100 text-green-700 p-2 mb-4 rounded">
-            {message}
-          </div>
-        )}
-
-        {activeTab === "account" && (
-          <AccountProfilr/>
-        )}
-        {activeTab === 'documents' && (
-         <DocumentsProfile /> 
-        )}
-        {activeTab === "finance" && (
-            <FinanceProfile />
-        )}
+        <Outlet />
       </div>
     </div>
   );

@@ -27,7 +27,7 @@ const Footers = () => {
                     </button>
                 </div>
             </div>
-            <div className="pl-[220px] pr-[220px] mb-5">
+            <div className="pl-[80px] pr-[80px] mb-5">
                 <div className=" flex gap-10 justify-around">
                     <div className="w-[400px]">
                         <h3 className='text-gray-400 font-raleway font-bold text-[22px]'>Về InBook</h3>

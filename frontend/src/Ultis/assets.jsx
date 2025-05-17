@@ -18,6 +18,8 @@ import pic_1 from '../assets/pic_1.jpg'
 import pic_2 from '../assets/pic_2.jpg'
 import pic_3 from '../assets/pic_3.jpg'
 import pic_4 from '../assets/pic_4.webp'
+import banner_1 from '../assets/banner_1.jpg'
+import banner_2 from '../assets/banner_2.jpg'
 const assets = {
     slider_1,
     slider_2,
@@ -38,7 +40,9 @@ const assets = {
     pic_1,
     pic_2,
     pic_3,
-    pic_4
+    pic_4,
+    banner_1,
+    banner_2
 }
 
 export default assets

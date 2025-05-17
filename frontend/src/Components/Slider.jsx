@@ -4,10 +4,10 @@ import assets from "../Ultis/assets";
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "framer-motion";
 
-const { slider_1, slider_2, slider_3, slider_4, slider_5 } = assets;
+const { banner_1, banner_2, slider_3, slider_4, slider_5 } = assets;
 const { MdKeyboardArrowLeft, MdKeyboardArrowRight } = icons;
 
-const images = [slider_1, slider_2, slider_3, slider_4, slider_5];
+const images = [banner_1, banner_2, slider_3, slider_4, slider_5];
 
 const Slider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,24 +39,24 @@ const Slider = () => {
                 animate={{ opacity: 1, x: 0 }} // Hiển thị ở vị trí trung tâm
                 exit={{ opacity: 0, x: 70 }} // Rời khỏi sang bên trái
                 transition={{ duration: 1.0 }} // Thời gian chuyển động
-                className="w-full h-[550px] object-fill rounded-lg"
+                className="w-full h-[350px]  rounded-lg object-cover"
             />
         </AnimatePresence>
       <div className="flex justify-center">
         <div
-          className="py-4 w-[60px] bg-blue-500 opacity-20 rounded-full absolute top-60 left-2 cursor-pointer"
+          className="py-4 w-[60px] bg-blue-500 opacity-20 rounded-full absolute top-32 left-2 cursor-pointer"
           onClick={prevSlide}
         >
           <MdKeyboardArrowLeft size={28} color="white" className="ml-3" />
         </div>
         <div
-          className="py-4 w-[60px] bg-blue-500 opacity-20 rounded-full absolute top-60 right-2 cursor-pointer "
+          className="py-4 w-[60px] bg-blue-500 opacity-20 rounded-full absolute top-32 right-2 cursor-pointer "
           onClick={nextSlide}
         >
           <MdKeyboardArrowRight size={28} color="white" className="ml-4 bg-" />
         </div>
       </div>
-      <div className="absolute top-24 left-36">
+      {/* <div className="absolute top-24 left-36">
         <motion.h1
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 5, x: 0 }}
@@ -94,7 +94,7 @@ const Slider = () => {
           {" "}
           Khám Phá
         </button>
-      </div>
+      </div> */}
       <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 flex gap-3">
         {images.map((_, index) => (
           <div

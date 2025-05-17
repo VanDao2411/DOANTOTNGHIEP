@@ -1,37 +1,74 @@
-import React, { useState } from 'react';
-import { FileTextIcon, DownloadIcon, UsersIcon } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { FileTextIcon, DownloadIcon, UsersIcon } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function DocumentsProfile() {
-  const [activeTab, setActiveTab] = useState('upload');
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // Lấy tab từ URL hoặc mặc định là "upload"
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabFromUrl = location.pathname.split("/").pop();
+    return tabFromUrl && tabFromUrl !== "documents" ? tabFromUrl : "upload";
+  });
+
+  // Nếu truy cập đúng /user-profile/documents thì tự động chuyển về upload
+  useEffect(() => {
+    if (location.pathname === "/user-profile/documents") {
+      navigate("/user-profile/documents/upload", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  // Đồng bộ trạng thái activeTab với URL
+  useEffect(() => {
+    const tabFromUrl = location.pathname.split("/").pop();
+    if (tabFromUrl !== activeTab && tabFromUrl !== "documents") {
+      setActiveTab(tabFromUrl);
+    }
+  }, [location.pathname]);
+
+  // Hàm xử lý khi chọn tab
+  const handleTabChange = (tab) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      navigate(`/user-profile/documents/${tab}`);
+    }
+  };
+
+  // Hàm render nội dung dựa trên tab hiện tại
   const renderContent = () => {
     switch (activeTab) {
-      case 'upload':
+      case "upload":
         return (
           <div className="py-8 text-center text-gray-600 border-b border-x rounded-b-md">
-            Ban chua upload tai lieu nao ca
+            Bạn chưa upload tài liệu nào cả.
           </div>
         );
-      case 'favorite':
+      case "favorite":
         return (
           <div className="py-8 text-center text-gray-600 border-b border-x rounded-b-md">
             Danh sách tài liệu yêu thích của bạn đang trống.
           </div>
         );
-      case 'download':
+      case "download":
         return (
-          <div className="py-8 text-center text-gray-600 border-b border-x rounded-b-md">
-            Đây là giao diện tài liệu đã download 🚀
+          <div className="py-8 text-gray-600 border-b border-x rounded-b-md">
+            <h3 className="text-lg font-semibold">Danh sách file đã tải:</h3>
+            <p>Chưa có tài liệu nào được tải xuống.</p>
           </div>
         );
-      case 'collection':
+      case "collection":
         return (
           <div className="py-8 text-center text-gray-600 border-b border-x rounded-b-md">
             Bộ sưu tập tài liệu của bạn hiện đang trống.
           </div>
         );
       default:
-        return null;
+        return (
+          <div className="py-8 text-center text-gray-600 border-b border-x rounded-b-md">
+            Không tìm thấy nội dung.
+          </div>
+        );
     }
   };
 
@@ -75,41 +112,41 @@ function DocumentsProfile() {
         <div className="mt-12">
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => setActiveTab('upload')}
+              onClick={() => handleTabChange("upload")}
               className={`px-4 py-2 rounded ${
-                activeTab === 'upload'
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                activeTab === "upload"
+                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               Tài liệu upload
             </button>
             <button
-              onClick={() => setActiveTab('favorite')}
+              onClick={() => handleTabChange("favorite")}
               className={`px-4 py-2 rounded ${
-                activeTab === 'favorite'
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                activeTab === "favorite"
+                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               Tài liệu yêu thích
             </button>
             <button
-              onClick={() => setActiveTab('download')}
+              onClick={() => handleTabChange("download")}
               className={`px-4 py-2 rounded ${
-                activeTab === 'download'
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                activeTab === "download"
+                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               Tài liệu download
             </button>
             <button
-              onClick={() => setActiveTab('collection')}
+              onClick={() => handleTabChange("collection")}
               className={`px-4 py-2 rounded ${
-                activeTab === 'collection'
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                activeTab === "collection"
+                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               Bộ sưu tập
@@ -117,48 +154,8 @@ function DocumentsProfile() {
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="mt-6">
-          <div className="text-sm">
-            <span className="text-gray-700">Filter: </span>
-            <span className="text-blue-600 font-medium">All</span>
-            <span className="text-gray-500"> | </span>
-            <span className="text-gray-600">đã duyệt</span>
-            <span className="text-gray-500"> | </span>
-            <span className="text-gray-600">chờ duyệt</span>
-            <span className="text-gray-500"> | </span>
-            <span className="text-gray-600">bị từ chối</span>
-          </div>
-        </div>
-
-        {/* Documents Table */}
-        <div className="mt-4">
-          <div>
-            <div className="rounded-t-md overflow-hidden">
-              <div className="bg-green-300 text-green-800 grid grid-cols-5 text-left">
-                <div className="py-3 px-4">name</div>
-                <div className="py-3 px-4">uploadDate</div>
-                <div className="py-3 px-4">status</div>
-                <div className="py-3 px-4">fee</div>
-                <div className="py-3 px-4">Action</div>
-              </div>
-            </div>
-
-            {renderContent()}
-          </div>
-        </div>
-
-        {/* Pagination */}
-        <div className="mt-4 flex justify-end">
-          <div className="flex gap-2">
-            <button className="px-4 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700">
-              Trước
-            </button>
-            <button className="px-4 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700">
-              Sau
-            </button>
-          </div>
-        </div>
+        {/* Render Content */}
+        <div className="mt-4">{renderContent()}</div>
       </div>
     </div>
   );

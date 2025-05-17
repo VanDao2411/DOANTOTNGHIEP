@@ -10,7 +10,11 @@ function FinanceProfile() {
     <div>
       <div className="bg-gray-100 min-h-screen w-full p-4">
         <div className="max-w-7xl mx-auto space-y-4">
-          <div className="bg-white rounded-md shadow p-4">
+          <div className="bg-white           useEffect(() => {
+            if (location.pathname !== `/user-profile/${activeTab}`) {
+              navigate(`/user-profile/${activeTab}`, { replace: true });
+            }
+          }, [activeTab, navigate, location.pathname]);rounded-md shadow p-4">
             <div className="flex justify-between">
               <div className="flex items-center space-x-2">
                 <div className="bg-orange-100 p-3 rounded-md">

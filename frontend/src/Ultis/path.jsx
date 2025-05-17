@@ -1,12 +1,12 @@
 const path = {
     PUBLIC: '/',
     HOME:'/',
-    ABOUT:'/about',
+    DOC:'/doc',
     CART:'/cart',
     HISTORIE:'/historie',
     UPLOAD:'/upload',
     SEARCH:'/search',
-    CATEGORY:'/category',
+    BOOK:'/books',
     PRODUCTDETAIL: '/product/:id',
     LOGIN:'/login',
     START: '*'

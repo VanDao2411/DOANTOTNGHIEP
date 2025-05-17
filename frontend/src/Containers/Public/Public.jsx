@@ -6,7 +6,7 @@ const Public = () => {
   return (
     <div>
       <Headers />
-      <div className=" p-[50px] pl-[220px] pr-[220px]">
+      <div className=" p-[50px] pl-[80px] pr-[80px]">
         <Outlet />
       </div>
       <div className="">

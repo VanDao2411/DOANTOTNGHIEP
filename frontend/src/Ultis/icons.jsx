@@ -1,7 +1,7 @@
 import React from 'react'
 import { CiShoppingCart, CiSearch, CiMail } from "react-icons/ci";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight,MdDelete, MdLocalPhone,MdErrorOutline, MdAssignmentReturn  } from "react-icons/md";
-import { FaMinus,FaPlus,FaPhoneAlt, FaCloudDownloadAlt } from "react-icons/fa";
+import { FaMinus,FaPlus,FaPhoneAlt, FaCloudDownloadAlt, FaDownload  } from "react-icons/fa";
 import { LuSend } from "react-icons/lu";
 import { TiSocialFacebook } from "react-icons/ti";
 import { BsInstagram } from "react-icons/bs";
@@ -40,7 +40,8 @@ const icons = {
     TbTruckDelivery,
     MdAssignmentReturn,
     SiHomeassistantcommunitystore,
-    FaCloudDownloadAlt   
+    FaCloudDownloadAlt,
+    FaDownload    
 }
 
 export default icons
