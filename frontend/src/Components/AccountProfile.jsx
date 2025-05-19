@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function AccountProfile({ setMessage }) {
   const [activeTab, setActiveTab] = useState('account');
@@ -19,6 +20,32 @@ function AccountProfile({ setMessage }) {
     newPassword: '',
     confirmPassword: '',
   });
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname.endsWith('/password')) {
+      setActiveTab('password');
+    } else {
+      setActiveTab('account');
+    }
+  }, [location.pathname]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'password') {
+      // Đặt URL chính xác là /user-profile/password
+      if (location.pathname !== '/user-profile/password') {
+        navigate('/user-profile/password');
+      }
+    } else {
+      // Khi quay lại tab account, về đúng /user-profile
+      if (location.pathname !== '/user-profile') {
+        navigate('/user-profile');
+      }
+    }
+  };
 
   const handleUpdate = () => {
     setMessage("Cập nhật thông tin thành công!");
@@ -54,13 +81,13 @@ function AccountProfile({ setMessage }) {
       <div className="flex space-x-4 mb-6">
         <button
           className={`px-4 py-2 rounded ${activeTab === 'account' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => setActiveTab('account')}
+          onClick={() => handleTabChange('account')}
         >
           Tài khoản
         </button>
         <button
           className={`px-4 py-2 rounded ${activeTab === 'password' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => setActiveTab('password')}
+          onClick={() => handleTabChange('password')}
         >
           Thay đổi mật khẩu
         </button>

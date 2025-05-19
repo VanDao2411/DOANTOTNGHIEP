@@ -5,12 +5,12 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAvatar } from "../Context/AvatarContext";
 import apiProducts from "../apis/apiProducts.json";
 
-const activeStyle = (bottom) => `
-    relative text-blue-500 after:content-[''] after:absolute after:left-0 after:bottom-[${bottom}px] after:w-full after:h-[2px] after:bg-blue-500 after:scale-x-100
+const activeStyle = () => `
+    relative text-blue-500 after:content-[''] after:absolute after:left-0 after:bottom-[-16px] after:w-full after:h-[2px] after:bg-blue-500 after:scale-x-100
 `;
 
-const notActiveStyle = (bottom) => `
-    relative hover:text-blue-200 after:content-[''] after:absolute after:left-0 after:bottom-[${bottom}px] after:w-full after:h-[2px] after:bg-blue-200 after:scale-x-0 after:origin-center after:transition-transform after:duration-300 hover:after:scale-x-100
+const notActiveStyle = () => `
+    relative hover:text-blue-200 after:content-[''] after:absolute after:left-0 after:bottom-[-16px] after:w-full after:h-[2px] after:bg-blue-200 after:scale-x-0 after:origin-center after:transition-transform after:duration-300 hover:after:scale-x-100
 `;
 
 const { FaCloudDownloadAlt, CiSearch } = icons;
@@ -53,19 +53,19 @@ const Headers = () => {
             <div className="flex mt-4 ml-[50px] justify-around gap-[60px]">
                 <div>
                     <ul className="flex gap-8 font-raleway ml-10">
-                        <NavLink to="/" className={({ isActive }) => (isActive ? activeStyle("-16") : notActiveStyle("-16"))}>
+                        <NavLink to="/" className={({ isActive }) => (isActive ? activeStyle() : notActiveStyle())}>
                             HOME
                         </NavLink>
-                        <NavLink to="/doc" className={({ isActive }) => (isActive ? activeStyle("-16") : notActiveStyle("-16"))}>
+                        <NavLink to="/doc" className={({ isActive }) => (isActive ? activeStyle() : notActiveStyle())}>
                             DOC
                         </NavLink>
-                        <NavLink to="/books" className={({ isActive }) => (isActive ? activeStyle("-16") : notActiveStyle("-16"))}>
+                        <NavLink to="/books" className={({ isActive }) => (isActive ? activeStyle() : notActiveStyle())}>
                             BOOK
                         </NavLink>
-                        <NavLink to="/historie" className={({ isActive }) => (isActive ? activeStyle("-16") : notActiveStyle("-16"))}>
+                        <NavLink to="/historie" className={({ isActive }) => (isActive ? activeStyle() : notActiveStyle())}>
                             HISTOIRE
                         </NavLink>
-                        <NavLink to="/upload" className={({ isActive }) => (isActive ? activeStyle("-16") : notActiveStyle("-16"))}>
+                        <NavLink to="/upload" className={({ isActive }) => (isActive ? activeStyle() : notActiveStyle())}>
                             UPLOAD
                         </NavLink>
                     </ul>
@@ -111,7 +111,7 @@ const Headers = () => {
                 <div className="w-10 h-10 ">
                     <img src={avatar} className=" w-full h-full object-cover rounded-full " alt="" onClick={() => navigate("/user-profile")} />
                 </div>
-                <NavLink to="/login" className={({ isActive }) => (isActive ? activeStyle("-16") : notActiveStyle("-16"))}>
+                <NavLink to="/login" className={({ isActive }) => (isActive ? activeStyle() : notActiveStyle())}>
                     LOGIN
                 </NavLink>
             </div>

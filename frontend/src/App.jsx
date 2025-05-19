@@ -28,7 +28,7 @@ function App() {
 
             <Route path="/user-profile/*" element={<UserProfile />}>
               <Route path="account" element={<AccountProfile />} />
-              
+              <Route path="password" element={<AccountProfile />} />
               <Route path="documents/*" element={<DocumentsProfile />} />
               <Route path="finance" element={<FinanceProfile/>} />
             </Route>

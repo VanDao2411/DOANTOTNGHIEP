@@ -51,6 +51,7 @@ const Home = () => {
           transition={{ duration: 0.7, type: "spring", stiffness: 80, damping: 15 }}
           whileHover={{ scale: 1.08, transition: { duration: 0.5, type: "spring", stiffness: 120, damping: 10 } }}
           className="rounded-xl p-6 bg-blue-100 shadow text-blue-900 flex flex-col items-center cursor-pointer transition-transform duration-100"
+          onClick={() => window.location.href = "/doc"}
         >
           <FaBook className="text-3xl mb-2 text-blue-500" />
           <h2 className="font-bold text-lg mb-2">Tài liệu học tập</h2>
@@ -63,6 +64,7 @@ const Home = () => {
           transition={{ duration: 0.8, type: "spring", stiffness: 80, damping: 15 }}
           whileHover={{ scale: 1.08, transition: { duration: 0.5, type: "spring", stiffness: 120, damping: 10 } }}
           className="rounded-xl p-6 bg-green-100 shadow text-green-900 flex flex-col items-center cursor-pointer transition-transform duration-100"
+          onClick={() => window.location.href = "/books"}
         >
           <FaUserGraduate className="text-3xl mb-2 text-green-500" />
           <h2 className="font-bold text-lg mb-2">Phát triển bản thân</h2>
@@ -75,6 +77,7 @@ const Home = () => {
           transition={{ duration: 0.9, type: "spring", stiffness: 80, damping: 15 }}
           whileHover={{ scale: 1.08, transition: { duration: 0.5, type: "spring", stiffness: 120, damping: 10 } }}
           className="rounded-xl p-6 bg-yellow-100 shadow text-yellow-900 flex flex-col items-center cursor-pointer transition-transform duration-100"
+          onClick={() => window.location.href = "/books"}
         >
           <FaFeatherAlt className="text-3xl mb-2 text-yellow-500" />
           <h2 className="font-bold text-lg mb-2">Văn học & Truyện</h2>
@@ -87,6 +90,7 @@ const Home = () => {
           transition={{ duration: 1.0, type: "spring", stiffness: 80, damping: 15 }}
           whileHover={{ scale: 1.08, transition: { duration: 0.5, type: "spring", stiffness: 120, damping: 10 } }}
           className="rounded-xl p-6 bg-pink-100 shadow text-pink-900 flex flex-col items-center cursor-pointer transition-transform duration-100"
+          onClick={() => window.location.href = "/books"}
         >
           <FaChartLine className="text-3xl mb-2 text-pink-500" />
           <h2 className="font-bold text-lg mb-2">Kinh tế & Marketing</h2>
@@ -99,6 +103,7 @@ const Home = () => {
           transition={{ duration: 1.1, type: "spring", stiffness: 80, damping: 15 }}
           whileHover={{ scale: 1.08, transition: { duration: 0.5, type: "spring", stiffness: 120, damping: 10 } }}
           className="rounded-xl p-6 bg-purple-100 shadow text-purple-900 flex flex-col items-center cursor-pointer transition-transform duration-100"
+          onClick={() => window.location.href = "/books"}
         >
           <FaMicrochip className="text-3xl mb-2 text-purple-500" />
           <h2 className="font-bold text-lg mb-2">Công nghệ & Kỹ thuật</h2>

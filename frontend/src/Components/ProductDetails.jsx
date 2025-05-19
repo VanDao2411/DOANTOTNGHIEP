@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { ThumbsUpIcon, ShareIcon, UserIcon, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ThumbsUpIcon, ShareIcon, UserIcon, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react'
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion'
 import jsPDF from "jspdf";
@@ -16,6 +16,46 @@ const ProductDetails = () => {
 
   const [showDownloadMsg, setShowDownloadMsg] = useState(false);
   const pdfRef = useRef(null);
+
+  // State cho bình luận
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([
+    // Bình luận mẫu ban đầu (có thể lấy từ API)
+    {
+      user: "test2",
+      rating: 5,
+      content: "good!!",
+      date: "27/05/2024 15:05",
+    },
+  ]);
+  // State cho đánh giá sao của người dùng
+  const [userRating, setUserRating] = useState(5);
+
+  // State cho yêu thích
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  // Hàm gửi bình luận
+  const handleSendComment = () => {
+    if (!comment.trim()) return;
+    const now = new Date();
+    setComments([
+      {
+        user: "Bạn",
+        rating: userRating,
+        content: comment,
+        date: now.toLocaleString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+      ...comments,
+    ]);
+    setComment("");
+    setUserRating(5); // Reset về 5 sao sau khi gửi
+  };
 
   useEffect(() => {
     fetch("/src/apis/apiProducts.json")
@@ -102,7 +142,7 @@ const ProductDetails = () => {
           <img
             src={productDetail.image}
             alt={productDetail.name}
-            className="w-48 h-64 sm:w-64 sm:h-80 md:w-72 md:h-[350px] object-cover rounded shadow-lg"
+            className="w-48 h-64 sm:w-64 sm:h-80 md:w-72 md:h-[350px] object-cover rounded-xl shadow-lg bg-blue-100"
           />
           <div className="flex justify-center gap-4 mt-4">
             {subImages.map((pic, idx) => (
@@ -110,7 +150,7 @@ const ProductDetails = () => {
                 key={idx}
                 src={pic}
                 alt={`Ảnh phụ ${idx + 1}`}
-                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-gray-200 shadow cursor-pointer transition-transform hover:scale-105"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-blue-200 shadow bg-blue-50 cursor-pointer transition-transform hover:scale-105"
                 onClick={() => {
                   setLightboxIndex(idx);
                   setLightboxOpen(true);
@@ -118,16 +158,19 @@ const ProductDetails = () => {
               />
             ))}
           </div>
-          <div className="flex gap-4 mt-4 text-gray-500 text-sm">
+          <div className="flex gap-4 mt-4 text-blue-700 text-sm">
             <span><UserIcon className="inline w-4 h-4 mr-1" /> Đã xem: <b>{productDetail.viewed}</b></span>
             <span><ThumbsUpIcon className="inline w-4 h-4 mr-1" /> Đã tải: <b>{productDetail.downloaded}</b></span>
             <span><ShareIcon className="inline w-4 h-4 mr-1" /> Còn lại: <b>{productDetail.in_stock}</b></span>
           </div>
         </div>
         {/* Thông tin chi tiết */}
-        <div ref={pdfRef} className="w-full lg:w-1/2 flex flex-col justify-center pl-0 lg:pl-6 mt-6 lg:mt-0 bg-white p-4 rounded shadow">
-          <h2 className="text-3xl font-bold text-[#80244d]  mb-3">{productDetail.name}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-base sm:text-lg text-gray-700 mb-4">
+        <div
+          ref={pdfRef}
+          className="w-full lg:w-1/2 flex flex-col justify-center pl-0 lg:pl-6 mt-6 lg:mt-0 bg-white p-6 rounded-xl shadow-xl border border-blue-100"
+        >
+          <h2 className="text-3xl font-bold text-[#2563eb] mb-3">{productDetail.name}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-base sm:text-lg text-blue-900 mb-4">
             <p><span className="font-semibold">Thể loại:</span> {productDetail.category || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Mã sản phẩm:</span> {productDetail.id_product || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Nhà cung cấp:</span> {productDetail.name_supplier || "Đang cập nhật"}</p>
@@ -141,18 +184,25 @@ const ProductDetails = () => {
             <p><span className="font-semibold">Số trang:</span> {productDetail.number_pages || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Số lượng còn lại:</span> {productDetail.in_stock || "Đang cập nhật"}</p>
           </div>
-          <p className="text-base sm:text-lg text-gray-700 mb-4">
+          <p className="text-base sm:text-lg text-blue-900 mb-4">
             <span className="font-semibold">Mô tả:</span> {productDetail.description || "Đang cập nhật"}
           </p>
           <div className="flex gap-3 mt-4">
             <button
-              className="px-6 py-3 bg-[#ff7043] text-white rounded-lg hover:bg-[#e95834] transition font-semibold shadow"
+              className="px-6 py-3 bg-gradient-to-r from-[#2563eb] to-[#60a5fa] text-white rounded-lg hover:from-[#1d4ed8] hover:to-[#3b82f6] transition font-semibold shadow"
               onClick={handleDownload}
             >
               Download
             </button>
-            <button className="px-6 py-3 bg-[#a24d7a] text-white rounded-lg hover:bg-[#80244d]  transition font-semibold shadow">
-              Submit
+            <button
+              className={`px-6 py-3 flex items-center justify-center bg-[#eaf1fb] rounded-lg hover:bg-[#dbeafe] transition shadow border border-blue-200`}
+              onClick={() => setIsFavorite(!isFavorite)}
+            >
+              <Heart
+                fill={isFavorite ? "#ef4444" : "none"}
+                color={isFavorite ? "#ef4444" : "#2563eb"}
+                className="w-6 h-6"
+              />
             </button>
           </div>
           {showDownloadMsg && (
@@ -164,34 +214,73 @@ const ProductDetails = () => {
       </div>
       {/* Bình luận mẫu */}
       <div className="p-6 border-t bg-gray-50">
+        {/* Đánh giá sao */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="font-semibold text-blue-700">Đánh giá của bạn:</span>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => setUserRating(star)}
+              className="focus:outline-none"
+            >
+              <span
+                className={
+                  star <= userRating
+                    ? "text-yellow-400 text-2xl"
+                    : "text-gray-300 text-2xl"
+                }
+              >
+                ★
+              </span>
+            </button>
+          ))}
+          <span className="ml-2 text-blue-700 font-medium">{userRating} sao</span>
+        </div>
         <textarea
           className="w-full p-3 border rounded resize-none focus:ring-2 focus:ring-emerald-400"
           placeholder="Viết bình luận..."
           rows={3}
+          value={comment}
+          onChange={e => setComment(e.target.value)}
         />
         <div className="flex justify-end mt-2">
-          <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition font-semibold shadow">
+          <button
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition font-semibold shadow"
+            onClick={handleSendComment}
+          >
             Gửi bình luận
           </button>
         </div>
-        <div className="mt-6">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-              <UserIcon className="w-4 h-4 text-gray-500" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">test2</span>
-                <div className="flex">
-                  {'★★★★★'.split('').map((star, i) => (
-                    <span key={i} className="text-yellow-400">{star}</span>
-                  ))}
+        <div className="mt-6 space-y-6">
+          {comments
+            .filter(cmt => cmt.rating >= 1)
+            .map((cmt, idx) => (
+              <div key={idx} className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-gray-500" />
                 </div>
-                <span className="text-gray-500 text-sm">27/05/2024 15:05</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{cmt.user}</span>
+                    <div className="flex">
+                      {"★★★★★".split("").map((star, i) => (
+                        <span
+                          key={i}
+                          className={
+                            i < cmt.rating ? "text-yellow-400" : "text-gray-300"
+                          }
+                        >
+                          {star}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-gray-500 text-sm">{cmt.date}</span>
+                  </div>
+                  <p className="text-gray-600 mt-1">{cmt.content}</p>
+                </div>
               </div>
-              <p className="text-gray-600 mt-1">good!!</p>
-            </div>
-          </div>
+            ))}
         </div>
       </div>
     </motion.div>
