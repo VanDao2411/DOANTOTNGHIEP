@@ -47,12 +47,60 @@ const FloatingMenu = () => {
     setMessages((prev) => [...prev, { text: inputMessage, isUser: true }]);
     setInputMessage("");
 
-    // Giả lập phản hồi từ hệ thống
     setTimeout(() => {
+      const lowerMsg = inputMessage.toLowerCase();
+      let reply = "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.";
+
+      // Gợi ý theo chủ đề
+      if (lowerMsg.includes("chủ đề")) {
+        // Tìm chủ đề sau từ "chủ đề"
+        const match = lowerMsg.match(/chủ đề\s*([a-zA-ZÀ-ỹ0-9\s]+)/);
+        let topic = match ? match[1].trim() : "";
+
+        // Nếu không tìm được, thử tìm cuối câu
+        if (!topic) {
+          const match2 = lowerMsg.match(/chủ đề.*?([a-zA-ZÀ-ỹ0-9\s]+)$/);
+          topic = match2 ? match2[1].trim() : "";
+        }
+
+        let suggestions = [];
+        if (topic.includes("khoa học công nghệ")) {
+          suggestions = [
+            "1. Sách: 'Cách mạng công nghiệp 4.0'",
+            "2. Sách: 'Khoa học dữ liệu cho người mới bắt đầu'",
+            "3. Sách: 'Trí tuệ nhân tạo và ứng dụng thực tiễn'",
+          ];
+        } else if (topic) {
+          suggestions = [
+            `1. Sách nổi bật về chủ đề ${topic}:`,
+            `- "Khám phá ${topic} toàn diện"`,
+            `- "Những điều cần biết về ${topic}"`,
+          ];
+        }
+        if (suggestions.length > 0) {
+          reply = `Gợi ý sách về chủ đề ${topic}:\n` + suggestions.join("\n");
+        } else {
+          reply =
+            "Bạn vui lòng cung cấp rõ hơn về chủ đề bạn quan tâm để chúng tôi gợi ý sách phù hợp!";
+        }
+      }
+      // Gợi ý về sản phẩm
+      else if (
+        lowerMsg.includes("sản phẩm") ||
+        lowerMsg.includes("sách") ||
+        lowerMsg.includes("tài liệu") ||
+        lowerMsg.includes("giá") ||
+        lowerMsg.includes("mua") ||
+        lowerMsg.includes("chi tiết")
+      ) {
+        reply =
+          "Bạn muốn hỏi về sản phẩm nào? Vui lòng cung cấp tên hoặc mã sản phẩm để chúng tôi hỗ trợ chi tiết hơn!";
+      }
+
       setMessages((prev) => [
         ...prev,
         {
-          text: "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.",
+          text: reply,
           isUser: false,
         },
       ]);
