@@ -10,6 +10,39 @@ import {
   UserPlusIcon,
 } from 'lucide-react';
 
+// Danh sách tên ngân hàng Việt Nam (ví dụ, bạn có thể bổ sung thêm)
+const BANKS = [
+  "Vietcombank",
+  "VietinBank",
+  "BIDV",
+  "Agribank",
+  "Techcombank",
+  "MB Bank",
+  "ACB",
+  "Sacombank",
+  "VPBank",
+  "SHB",
+  "TPBank",
+  "Eximbank",
+  "HDBank",
+  "SeABank",
+  "OCB",
+  "VIB",
+  "LienVietPostBank",
+  "SCB",
+  "Nam A Bank",
+  "ABBANK",
+  "Bac A Bank",
+  "PVcomBank",
+  "Saigonbank",
+  "PG Bank",
+  "BaoViet Bank",
+  "NCB",
+  "Kienlongbank",
+  "VietBank",
+  "CBBank"
+];
+
 function FinanceProfile() {
   // State điểm và lịch sử nhiệm vụ
   const [points, setPoints] = useState(100);
@@ -22,10 +55,13 @@ function FinanceProfile() {
   const [showExchange, setShowExchange] = useState(false);
 
   // Thêm state cho form đổi điểm
-  const [exchangePoints, setExchangePoints] = useState(1000);
+  const [exchangePoints, setExchangePoints] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccount, setBankAccount] = useState("");
   const [exchangeMsg, setExchangeMsg] = useState("");
+
+  // Thêm state cho gợi ý ngân hàng
+  const [bankSuggestions, setBankSuggestions] = useState([]);
 
   // Nhiệm vụ mẫu
   const missions = [
@@ -60,7 +96,8 @@ function FinanceProfile() {
 
   // Xử lý xác nhận đổi điểm
   const handleExchange = () => {
-    if (exchangePoints < 1000) {
+    const pointsNumber = Number(exchangePoints);
+    if (pointsNumber < 1000) {
       setExchangeMsg("Bạn cần nhập ít nhất 1.000 điểm để rút tiền!");
       return;
     }
@@ -109,10 +146,8 @@ function FinanceProfile() {
             <div className="flex flex-col gap-2 mt-4">
               <input
                 type="number"
-                min={1}
-                max={points}
                 value={exchangePoints}
-                onChange={e => setExchangePoints(Number(e.target.value))}
+                onChange={e => setExchangePoints(e.target.value)}
                 placeholder="Nhập số điểm muốn đổi (>= 1000)"
                 className="p-2 border rounded"
               />
@@ -120,9 +155,38 @@ function FinanceProfile() {
                 type="text"
                 placeholder="Tên ngân hàng"
                 value={bankName}
-                onChange={e => setBankName(e.target.value)}
+                onChange={e => {
+                  setBankName(e.target.value);
+                  // Gợi ý ngân hàng khi nhập
+                  if (e.target.value.trim() === "") {
+                    setBankSuggestions([]);
+                  } else {
+                    setBankSuggestions(
+                      BANKS.filter(b =>
+                        b.toLowerCase().includes(e.target.value.toLowerCase())
+                      )
+                    );
+                  }
+                }}
                 className="p-2 border rounded"
               />
+              {/* Hiển thị gợi ý ngân hàng */}
+              {bankSuggestions.length > 0 && (
+                <ul className="border rounded bg-white shadow max-h-40 overflow-y-auto z-10 absolute mt-12 w-full">
+                  {bankSuggestions.map((bank, idx) => (
+                    <li
+                      key={idx}
+                      className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                      onClick={() => {
+                        setBankName(bank);
+                        setBankSuggestions([]);
+                      }}
+                    >
+                      {bank}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <input
                 type="text"
                 placeholder="Số tài khoản ngân hàng"
