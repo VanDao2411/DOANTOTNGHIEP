@@ -14,6 +14,15 @@ exports.getAllDocuments = catchAsync(async (req, res, next) => {
         .limitFields()
         .paginate();
     
+    features.query = features.query
+    .populate({
+        path: 'authorId',
+        select: 'name' // Khi hiển thị danh sách, thường chỉ cần tên tác giả
+    }).populate({
+        path: 'categoryIds',
+        select: 'name' // Chỉ cần tên danh mục
+    });
+
     const documents = await features.query;
 
     res.status(200).json({

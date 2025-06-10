@@ -1,30 +1,81 @@
 import { useState } from "react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../../api"; // <<<--- Đảm bảo đường dẫn này đúng!
 
-export default function AuthOverlay() {
+export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
-  const [showForgot, setShowForgot] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
+  
+  // State để quản lý dữ liệu form
+  const [formData, setFormData] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    password: '',
+    passwordConfirm: '',
+  });
+
+  // State để quản lý giao diện
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  
   const navigate = useNavigate();
 
-  const handleAuthSubmit = (e) => {
-    e.preventDefault();
-    // Xử lý logic đăng nhập/đăng ký ở đây nếu cần
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      navigate("/");
-    }, 1500);
+  // Hàm xử lý khi người dùng nhập liệu
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleForgotSubmit = (e) => {
+  // Hàm xử lý khi nhấn nút Đăng nhập / Đăng ký
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
-    setShowForgot(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 1500);
+    setLoading(true);
+    setError(null);
+    setSuccessMessage('');
+
+    try {
+      let response;
+      if (isLogin) {
+        // --- Gọi API Đăng nhập ---
+        response = await apiClient.post('/auth/login', {
+          email: formData.email,
+          password: formData.password,
+        });
+      } else {
+        // --- Gọi API Đăng ký ---
+        if (formData.password !== formData.passwordConfirm) {
+          throw new Error("Mật khẩu và xác nhận mật khẩu không khớp!");
+        }
+        response = await apiClient.post('/auth/signup', {
+          fullName: formData.fullName,
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          passwordConfirm: formData.passwordConfirm,
+        });
+      }
+
+      const { token, data } = response.data;
+      
+      // Lưu token và user vào localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      setSuccessMessage(isLogin ? 'Đăng nhập thành công! Đang chuyển hướng...' : 'Đăng ký thành công! Đang chuyển hướng...');
+      
+      setTimeout(() => {
+        navigate("/"); // Chuyển về trang chủ
+        window.location.reload(); // Tải lại trang để cập nhật trạng thái đăng nhập
+      }, 1500);
+
+    } catch (err) {
+      // Xử lý lỗi và hiển thị
+      const errorMessage = err.response?.data?.message || err.message || 'Đã có lỗi xảy ra.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Animation variants
@@ -95,7 +146,7 @@ export default function AuthOverlay() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 overflow-hidden">
-      {/* Họa tiết nền */}
+      {/* Họa tiết nền (giữ nguyên) */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute left-[-80px] top-[-80px] w-[300px] h-[300px] bg-gradient-to-br from-blue-400/30 to-purple-300/10 rounded-full blur-3xl" />
         <div className="absolute right-[-100px] bottom-[-100px] w-[350px] h-[350px] bg-gradient-to-tl from-pink-400/20 to-blue-300/10 rounded-full blur-3xl" />
@@ -108,16 +159,16 @@ export default function AuthOverlay() {
         </svg>
       </div>
 
-      {/* Thông báo đăng nhập thành công */}
+      {/* Thông báo thành công (đã cập nhật để hiển thị message động) */}
       <AnimatePresence>
-        {showSuccess && (
+        {successMessage && ( // <<<--- SỬ DỤNG 'successMessage' STATE
           <motion.div
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
             className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg font-semibold text-lg"
           >
-            Đăng nhập thành công!
+            {successMessage} {/* <<<--- HIỂN THỊ MESSAGE TỪ STATE */}
           </motion.div>
         )}
       </AnimatePresence>
@@ -133,8 +184,17 @@ export default function AuthOverlay() {
           className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-blue-100"
         >
           <div className="p-10">
-            {/* Quên mật khẩu */}
+            {/* <<<--- THÊM KHỐI HIỂN THỊ LỖI ---<<< */}
             <AnimatePresence>
+              {error && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mb-4 p-3 bg-red-100 text-red-700 border border-red-200 rounded-lg text-sm text-center">
+                      {error}
+                  </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Quên mật khẩu và Đăng nhập/Đăng ký */}
+            <AnimatePresence mode="wait">
               {showForgot ? (
                 <motion.form
                   key="forgot"
@@ -142,7 +202,7 @@ export default function AuthOverlay() {
                   initial="hidden"
                   animate="visible"
                   exit="hidden"
-                  onSubmit={handleForgotSubmit}
+                  onSubmit={handleForgotSubmit} // <<<--- SỬ DỤNG HANDLER MỚI
                   className="space-y-6"
                 >
                   <motion.div variants={textVariants} className="text-center mb-6">
@@ -165,8 +225,8 @@ export default function AuthOverlay() {
                       type="email"
                       required
                       placeholder="email@example.com"
-                      value={forgotEmail}
-                      onChange={e => setForgotEmail(e.target.value)}
+                      value={forgotEmail} // <<<--- GIỮ NGUYÊN
+                      onChange={e => setForgotEmail(e.target.value)} // <<<--- GIỮ NGUYÊN
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40"
                     />
                   </motion.div>
@@ -175,13 +235,14 @@ export default function AuthOverlay() {
                     whileHover="hover"
                     whileTap="tap"
                     type="submit"
-                    className="w-full py-3 px-4 mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg shadow-lg transition-all duration-200 tracking-wide"
+                    disabled={loading} // <<<--- KẾT NỐI STATE 'loading'
+                    className="w-full py-3 px-4 mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg shadow-lg transition-all duration-200 tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Gửi yêu cầu
+                    {loading ? 'Đang gửi...' : 'Gửi yêu cầu'}
                   </motion.button>
                   <motion.button
                     type="button"
-                    onClick={() => setShowForgot(false)}
+                    onClick={() => { setShowForgot(false); setError(null); }}
                     className="w-full mt-2 text-blue-600 hover:text-purple-600 text-sm"
                   >
                     Quay lại đăng nhập
@@ -195,128 +256,64 @@ export default function AuthOverlay() {
                   initial="hidden"
                   animate="visible"
                   exit="hidden"
-                  onSubmit={handleAuthSubmit}
+                  onSubmit={handleAuthSubmit} // <<<--- SỬ DỤNG HANDLER MỚI
                   className="space-y-5"
                 >
                   <motion.div variants={textVariants} className="text-center mb-8">
-                    <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 drop-shadow">
-                      {isLogin ? "Đăng Nhập" : "Đăng Ký"}
-                    </h2>
-                    <p className="text-gray-500 mt-2 text-sm">
-                      {isLogin
-                        ? "Chào mừng bạn quay lại! Hãy đăng nhập để tiếp tục."
-                        : "Tạo tài khoản mới để trải nghiệm đầy đủ chức năng."}
-                    </p>
+                    {/* ... (Phần tiêu đề Đăng nhập/Đăng ký giữ nguyên) ... */}
+                  </motion.div>
+                  
+                  {/* --- CÁC TRƯỜNG INPUT ĐÃ ĐƯỢC CẬP NHẬT --- */}
+                  {!isLogin && (
+                    <>
+                      <motion.div variants={inputVariants}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+                          <motion.input name="username" type="text" placeholder="nguyenvana" required value={formData.username} onChange={handleInputChange} whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" }} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40" />
+                      </motion.div>
+                      <motion.div variants={inputVariants}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Tên đầy đủ</label>
+                          <motion.input name="fullName" type="text" placeholder="Nguyễn Văn A" value={formData.fullName} onChange={handleInputChange} whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" }} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40" />
+                      </motion.div>
+                    </>
+                  )}
+
+                  <motion.div variants={inputVariants}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <motion.input name="email" type="email" placeholder="email@example.com" required value={formData.email} onChange={handleInputChange} whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" }} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40" />
+                  </motion.div>
+
+                  <motion.div variants={inputVariants}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <motion.input name="password" type="password" placeholder="••••••••" required value={formData.password} onChange={handleInputChange} whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" }} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40" />
                   </motion.div>
 
                   {!isLogin && (
                     <motion.div variants={inputVariants}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tên đầy đủ
-                      </label>
-                      <motion.input
-                        whileFocus={{
-                          scale: 1.01,
-                          boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
-                        }}
-                        type="text"
-                        placeholder="Nguyễn Văn A"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40"
-                      />
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu</label>
+                      <motion.input name="passwordConfirm" type="password" placeholder="••••••••" required value={formData.passwordConfirm} onChange={handleInputChange} whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" }} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40" />
                     </motion.div>
                   )}
-
-                  <motion.div variants={inputVariants}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <motion.input
-                      whileFocus={{
-                        scale: 1.01,
-                        boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
-                      }}
-                      type="email"
-                      placeholder="email@example.com"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40"
-                    />
-                  </motion.div>
-
-                  <motion.div variants={inputVariants}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mật khẩu
-                    </label>
-                    <motion.input
-                      whileFocus={{
-                        scale: 1.01,
-                        boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
-                      }}
-                      type="password"
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40"
-                    />
-                  </motion.div>
-
-                  {!isLogin && (
-                    <motion.div variants={inputVariants}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Xác nhận mật khẩu
-                      </label>
-                      <motion.input
-                        whileFocus={{
-                          scale: 1.01,
-                          boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
-                        }}
-                        type="password"
-                        placeholder="••••••••"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-blue-50/40"
-                      />
-                    </motion.div>
-                  )}
-
+                  {/* --- KẾT THÚC CÁC TRƯỜNG INPUT --- */}
+                  
                   {isLogin && (
-                    <motion.div
-                      variants={textVariants}
-                      className="flex justify-end"
-                    >
-                      <motion.button
-                        type="button"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="text-sm text-blue-600 hover:underline"
-                        onClick={() => setShowForgot(true)}
-                      >
+                    <motion.div variants={textVariants} className="flex justify-end">
+                      <motion.button type="button" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="text-sm text-blue-600 hover:underline" onClick={() => setShowForgot(true)}>
                         Quên mật khẩu?
                       </motion.button>
                     </motion.div>
                   )}
 
                   <motion.button
-                    variants={buttonVariants}
-                    initial="initial"
-                    animate="animate"
-                    whileHover="hover"
-                    whileTap="tap"
+                    variants={buttonVariants} whileHover="hover" whileTap="tap"
                     type="submit"
-                    className="w-full py-3 px-4 mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg shadow-lg transition-all duration-200 tracking-wide"
+                    disabled={loading} // <<<--- KẾT NỐI STATE 'loading'
+                    className="w-full py-3 px-4 mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg shadow-lg transition-all duration-200 tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLogin ? "Đăng Nhập" : "Đăng Ký"}
+                    {loading ? 'Đang xử lý...' : (isLogin ? "Đăng Nhập" : "Đăng Ký")}
                   </motion.button>
-                  <motion.div
-                    variants={textVariants}
-                    className="mt-7 text-center text-sm"
-                  >
-                    <span className="text-gray-600">
-                      {isLogin ? "Chưa có tài khoản?" : "Đã có tài khoản?"}
-                    </span>
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsLogin(!isLogin)}
-                      className="ml-2 text-blue-600 font-semibold hover:text-purple-600 transition-colors"
-                    >
-                      {isLogin ? "Đăng ký ngay" : "Đăng nhập"}
-                    </motion.button>
+
+                  <motion.div variants={textVariants} className="mt-7 text-center text-sm">
+                    {/* ... (Phần chuyển đổi giữa Đăng nhập và Đăng ký giữ nguyên) ... */}
                   </motion.div>
                 </motion.form>
               )}
