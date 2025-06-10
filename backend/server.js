@@ -1,5 +1,10 @@
 const dotenv = require('dotenv');
 dotenv.config()
+console.log('--- ĐANG KIỂM TRA BIẾN MÔI TRƯỜNG TRÊN SERVER ---');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('MONGODB_URI có tồn tại không?:', !!process.env.MONGODB_URI);
+console.log('Giá trị MONGODB_URI (20 ký tự đầu):', process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'undefined');
+console.log('----------------------------------------------------');
 
 console.log('--- ĐANG KIỂM TRA BIẾN MÔI TRƯỜNG TRÊN SERVER ---');
 console.log('NODE_ENV:', process.env.NODE_ENV);
