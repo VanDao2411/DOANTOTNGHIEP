@@ -69,6 +69,10 @@ const FloatingMenu = () => {
             "1. Sách: 'Cách mạng công nghiệp 4.0'",
             "2. Sách: 'Khoa học dữ liệu cho người mới bắt đầu'",
             "3. Sách: 'Trí tuệ nhân tạo và ứng dụng thực tiễn'",
+            "4. Tài liệu: 'Ứng dụng IoT trong sản xuất thông minh'",
+            "5. Sản phẩm: 'Robot giáo dục STEM cho học sinh'",
+            "6. Sản phẩm: 'Bộ Kit lập trình Arduino cơ bản'",
+            "7. Sản phẩm: 'Khóa học trực tuyến về AI và Machine Learning'",
           ];
         } else if (topic) {
           suggestions = [

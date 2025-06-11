@@ -14,7 +14,16 @@ exports.getAllDocuments = catchAsync(async (req, res, next) => {
         .limitFields()
         .paginate();
     
-    const documents = await features.query;
+    // Populate categoryIds and tagIds
+    const documents = await features.query
+        .populate({
+            path: 'categoryIds',
+            select: 'name' // Assuming 'name' is the field you want to retrieve from the Category model
+        })
+        .populate({
+            path: 'tagIds',
+            select: 'name' // Assuming 'name' is the field you want to retrieve from the Tag model
+        });
 
     res.status(200).json({
         status: 'success',

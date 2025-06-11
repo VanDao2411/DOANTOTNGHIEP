@@ -1,7 +1,9 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaUpload } from "react-icons/fa";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+
+const API_URL = "http://localhost:5000";
 
 export default function Upload() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,6 +18,46 @@ export default function Upload() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState({});
+  // eslint-disable-next-line no-unused-vars
+  const [coverImage, setCoverImage] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [documentFile, setDocumentFile] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [message, setMessage] = useState("");
+  const [categories, setCategories] = useState([]); // Thêm state này
+  const user_id = localStorage.getItem(`user_id`) || "default_user";
+
+
+  useEffect(() => {
+    const stored = localStorage.getItem(`uploadedFiles_${user_id}`);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const onlyUploads = parsed.filter(item => item.type === "upload");
+        setUploadedFiles(onlyUploads);
+      } catch {
+        setUploadedFiles([]);
+      }
+    } else {
+      setUploadedFiles([]);
+    }
+  }, [user_id]);
+
+  // Lấy danh mục từ API
+  useEffect(() => {
+    fetch("http://localhost:5000/api/v1/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        const apiCategories = data.data.categories || [];
+        setCategories([{ _id: "all", name: "Tất cả", slug: "tat-ca" }, ...apiCategories]);
+      })
+      .catch((err) => {
+        setCategories([{ _id: "all", name: "Tất cả", slug: "tat-ca" }]);
+        console.error("Lỗi khi lấy category:", err);
+      });
+  }, []);
+
+
 
   const handleFileChange = (event) => {
     if (event.target.files.length > 0) {
@@ -33,17 +75,21 @@ export default function Upload() {
   const handleUpload = (e) => {
     e.preventDefault();
     if (!fileName || !title || !category || !price || !description) return;
-    setUploadedFiles([
-      ...uploadedFiles,
-      {
-        fileName,
-        fileUrl: fileUrl || imageUrl,
-        title,
-        category,
-        price,
-        description
-      }
-    ]);
+
+    const newFile = {
+      fileName,
+      fileUrl: fileUrl || imageUrl,
+      title,
+      category,
+      price,
+      description,
+      type: 'upload', // Thêm loại upload
+    };
+
+    const newFiles = [...uploadedFiles, newFile];
+    setUploadedFiles(newFiles);
+    localStorage.setItem(`uploadedFiles_${user_id}`, JSON.stringify(newFiles));
+
     // Reset form
     setFileName("");
     setFileUrl("");
@@ -54,6 +100,7 @@ export default function Upload() {
     setDescription("");
     setIsModalOpen(false);
   };
+
 
   const handleCardClick = (idx) => {
     setEditIndex(idx);
@@ -71,6 +118,32 @@ export default function Upload() {
 
   const handleDelete = (idx) => {
     setUploadedFiles(files => files.filter((_, i) => i !== idx));
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    if (coverImage) formData.append("coverImage", coverImage);
+    if (documentFile) formData.append("documentFile", documentFile);
+
+    try {
+      const res = await fetch(`${API_URL}/api/v1/documents/upload`, {
+        method: "POST",
+        body: formData,
+        // Nếu cần token:
+        // headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("Tải lên thành công!");
+      } else {
+        setMessage(data.message || "Tải lên thất bại!");
+      }
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      setMessage("Lỗi kết nối server!");
+    }
   };
 
   return (
@@ -170,14 +243,21 @@ export default function Upload() {
                   value={title} onChange={e => setTitle(e.target.value)} />
 
                 <label className="block font-medium mt-2">Danh mục (*)</label>
-                <select className="w-full p-2 border rounded-md"
-                  value={category} onChange={e => setCategory(e.target.value)}>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                >
                   <option value="">-Chọn danh mục-</option>
-                  <option>Giáo dục</option>
-                  <option>Kinh tế</option>
-                  <option>Kỹ thuật</option>
+                  {categories
+                    .filter(cat => cat._id !== "all")
+                    .map(cat => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
                 </select>
-                <label className="block font-medium mt-2">Giá cả (*)</label>
+                <label className="block font-medium mt-2">Điểm (*)</label>
                 <input type="text" className="w-full p-2 border rounded-md" placeholder="Nhập..."
                   value={price} onChange={e => setPrice(e.target.value)} />
                 <label className="block font-medium mt-2">Mô tả (*)</label>
@@ -331,7 +411,7 @@ export default function Upload() {
                       {item.category}
                     </span>
                     <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">
-                      {item.price} VNĐ
+                      {item.price} điểm
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm flex-1 mb-2 line-clamp-3">{item.description}</p>

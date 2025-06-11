@@ -5,28 +5,52 @@ import ProductCard from './ProductCard';
 
 const Product = () => {
   const navigate = useNavigate();
-  const { addToCart, addToHistory } = useCart();
+  const { addToHistory } = useCart();
   const [products, setProducts] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [message, setMessage] = useState('');
+  const user_id = localStorage.getItem(`user_id`);
 
   useEffect(() => {
-    fetch('/src/apis/apiProducts.json')
+    fetch('http://localhost:5000/api/v1/documents', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    })
       .then((res) => res.json())
-      .then((data) => setProducts(data))
+      .then((data) => setProducts(data.data.documents || []))
       .catch((err) => console.error('Lỗi khi lấy dữ liệu:', err));
   }, []);
+  console.log('Products:', products);
 
   const visibleProducts = products.slice(0, visibleCount);
 
   const handleProductClick = (product) => {
     addToHistory(product);
+
     navigate(`/product/${product.id}`);
   };
 
   const handleDownload = (product) => {
-    addToCart(product);
+    // addToCart(product);
     setMessage('Download thành công!');
+    const whitelistKey = `uploadedFiles_${user_id}`;
+    const currentWhitelist = JSON.parse(localStorage.getItem(whitelistKey)) || [];
+    console.log('Download:', product);
+    const newItem = {
+      id: product._id,
+      fileName: product.name,
+      title: product.name,
+      category: product.category || "Chưa cập nhật",
+      price: product.price || "Chưa cập nhật",
+      description: product.description || "Chưa cập nhật",
+      fileUrl: product.image || "",
+      type: "download",
+    };
+    const updatedWhitelist = [newItem, ...currentWhitelist.filter(item => item.id !== newItem.id)];
+    localStorage.setItem(whitelistKey, JSON.stringify(updatedWhitelist));
     setTimeout(() => setMessage(''), 3000);
   };
 
@@ -40,7 +64,7 @@ const Product = () => {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {visibleProducts.map((product) => (
           <ProductCard
-            key={product.id}
+            key={product._id}
             product={product}
             onClick={handleProductClick}
             onDownload={handleDownload}

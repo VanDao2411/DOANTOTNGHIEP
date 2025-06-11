@@ -5,83 +5,88 @@ const CartContext = createContext();
 
 // 2. Provider để chứa state
 export const CartProvider = ({ children }) => {
+  // Lấy userId từ localStorage hoặc mặc định
+  const [userId, setUserId] = useState(localStorage.getItem("user_id") || "default_user");
+
+  const getUsername = () => localStorage.getItem(`username_${userId}`) || "";
+
   const [cartItems, setCartItems] = useState([]);
-  const [viewHistory, setViewHistory] = useState([]);
+  const [viewHistory, setViewHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`viewHistory_${userId}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Cập nhật userId khi localStorage thay đổi (trong cùng tab)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newUserId = localStorage.getItem("user_id") || "default_user";
+      setUserId((prevId) => (prevId !== newUserId ? newUserId : prevId));
+    }, 1000); // kiểm tra mỗi giây
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Load dữ liệu từ localStorage khi khởi động
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    const savedHistory = localStorage.getItem("viewHistory");
-    if (savedCart) setCartItems(JSON.parse(savedCart));
-    if (savedHistory) setViewHistory(JSON.parse(savedHistory));
+    try {
+      const savedCart = localStorage.getItem("cart");
+      if (savedCart) setCartItems(JSON.parse(savedCart));
+    } catch {
+      setCartItems([]);
+    }
   }, []);
 
-  // Lưu vào localStorage khi có thay đổi
+  // Luôn load lại viewHistory khi userId thay đổi
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem(`viewHistory_${userId}`);
+      setViewHistory(savedHistory ? JSON.parse(savedHistory) : []);
+    } catch {
+      setViewHistory([]);
+    }
+  }, [userId]);
+
+  // Lưu cart và viewHistory vào localStorage khi có thay đổi
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
-    localStorage.setItem("viewHistory", JSON.stringify(viewHistory));
-  }, [cartItems, viewHistory]);
-
-  const addToCart = (product) => {
-    setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === product.id);
-      if (existingItem) {
-        // Nếu sản phẩm đã tồn tại, tăng số lượng
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        // Nếu sản phẩm chưa có, thêm vào giỏ hàng
-        return [...prev, { ...product, quantity: 1 }];
-      }
-    });
-  };
+    const username = getUsername();
+    if (username) {
+      localStorage.setItem(`viewHistory_${userId}`, JSON.stringify(viewHistory));
+    }
+  }, [cartItems, viewHistory, userId]);
 
   const addToHistory = (product) => {
-    // Kiểm tra xem sản phẩm đã có trong lịch sử chưa
-    const existingIndex = viewHistory.findIndex(item => item.id === product.id);
-    
-    if (existingIndex >= 0) {
-      // Nếu có rồi thì đưa lên đầu mảng
-      const updatedHistory = [
-        product,
-        ...viewHistory.filter(item => item.id !== product.id)
-      ];
-      setViewHistory(updatedHistory.slice(0, 10)); // Giới hạn 10 sản phẩm
-    } else {
-      // Nếu chưa có thì thêm vào đầu mảng
-      setViewHistory([product, ...viewHistory].slice(0, 10));
-    }
-  };
-
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-
-  const updateCartItemQuantity = (id, quantity) => {
-    if (quantity < 1) return; // Không cho số lượng nhỏ hơn 1
-    setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
-  };
-
-  const removeCartItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    setViewHistory((prevHistory) => {
+      const existingIndex = prevHistory.findIndex(item => item.id === product.id);
+      let updatedHistory;
+      if (existingIndex >= 0) {
+        updatedHistory = [
+          product,
+          ...prevHistory.filter(item => item.id !== product.id)
+        ];
+      } else {
+        updatedHistory = [product, ...prevHistory];
+      }
+      return updatedHistory.slice(0, 10); // giới hạn 10 sản phẩm
+    });
   };
 
   const clearHistory = () => {
     setViewHistory([]);
+    const username = getUsername();
+    if (username) localStorage.removeItem(`viewHistory_${userId}`);
   };
 
   return (
     <CartContext.Provider
       value={{
         cartItems,
-        addToCart,
-        cartCount,
-        updateCartItemQuantity,
-        removeCartItem,
         viewHistory,
+        setViewHistory,
         addToHistory,
         clearHistory
       }}

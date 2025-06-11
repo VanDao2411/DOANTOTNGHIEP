@@ -1,10 +1,26 @@
 import React, { useState, useEffect } from "react";
-import apiProducts from "../apis/apiProducts.json";
 import { FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Search = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+  const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
+
+  // Lấy dữ liệu sản phẩm từ API khi mount
+  useEffect(() => {
+    fetch('http://localhost:5000/api/v1/documents', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    })
+      .then((res) => res.json())
+      .then((data) => setProducts(data.data.documents || []))
+      .catch((err) => console.error('Lỗi khi lấy dữ liệu:', err));
+  }, []);
 
   // Tìm kiếm realtime khi nhập ký tự đầu tiên
   useEffect(() => {
@@ -12,14 +28,14 @@ const Search = () => {
       setResults([]);
       return;
     }
-    const filtered = apiProducts.filter(
+    const filtered = products.filter(
       (item) =>
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        (item.author && item.author.toLowerCase().includes(query.toLowerCase())) ||
-        (item.category && item.category.toLowerCase().includes(query.toLowerCase()))
+        item.title.toLowerCase().includes(query.toLowerCase()) ||
+        (item.authorName && item.authorName.toLowerCase().includes(query.toLowerCase())) ||
+        (Array.isArray(item.categoryIds) && item.categoryIds.some(cat => cat.name && cat.name.toLowerCase().includes(query.toLowerCase())))
     );
     setResults(filtered);
-  }, [query]);
+  }, [query, products]);
 
   // Giữ lại handleSearch để khi nhấn Enter không bị reload trang
   const handleSearch = (e) => {
@@ -74,22 +90,30 @@ const Search = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {results.map((item) => (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="bg-white rounded-xl shadow p-4 flex flex-col hover:shadow-lg transition border border-blue-100"
                 >
                   <img
-                    src={item.image}
-                    alt={item.name}
+                    src={item.coverImageUrl || item.fileUrl}
+                    alt={item.title}
                     className="h-40 w-full object-cover rounded mb-3 bg-[#eaf1fb]"
                   />
-                  <div className="font-bold text-lg text-[#2563eb] mb-1">{item.name}</div>
-                  <div className="text-sm text-blue-500 mb-2">{item.author}</div>
+                  <div className="font-bold text-lg text-[#2563eb] mb-1">{item.title}</div>
+                  <div className="text-sm text-blue-500 mb-2">{item.authorName}</div>
                   <div className="flex flex-wrap gap-2 text-xs text-blue-700 mb-2">
-                    <span>Thể loại: {item.category}</span>
-                    <span>Lượt tải: {item.downloaded}</span>
+                    <span>
+                      Thể loại:{" "}
+                      {Array.isArray(item.categoryIds) && item.categoryIds.length > 0
+                        ? item.categoryIds.map(cat => cat.name).join(", ")
+                        : "Đang cập nhật"}
+                    </span>
+                    <span>Lượt tải: {item.downloadCount ?? 0}</span>
                   </div>
                   <div className="line-clamp-2 text-blue-900 text-xs mb-2">{item.description}</div>
-                  <button className="mt-auto px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#60a5fa] text-white rounded hover:from-[#1d4ed8] hover:to-[#3b82f6] transition">
+                  <button
+                    className="mt-auto px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#60a5fa] text-white rounded hover:from-[#1d4ed8] hover:to-[#3b82f6] transition"
+                    onClick={() => navigate(`/product/${item._id}`)}
+                  >
                     Xem chi tiết
                   </button>
                 </div>

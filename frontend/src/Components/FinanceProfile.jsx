@@ -45,7 +45,9 @@ const BANKS = [
 
 function FinanceProfile() {
   // State điểm và lịch sử nhiệm vụ
+  // eslint-disable-next-line no-unused-vars
   const [points, setPoints] = useState(100);
+  // eslint-disable-next-line no-unused-vars
   const [history, setHistory] = useState([
     { type: "Đăng ký tài khoản", points: 50, date: "01/06/2025" },
     { type: "Đăng nhập mỗi ngày", points: 10, date: "03/06/2025" },

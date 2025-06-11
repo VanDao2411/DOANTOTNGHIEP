@@ -33,6 +33,34 @@ const ProductDetails = () => {
 
   // State cho yêu thích
   const [isFavorite, setIsFavorite] = useState(false);
+  const user_id = localStorage.getItem("user_id") || "default_user";
+
+  const handleWhitList = () => {
+    const whitelistKey = `uploadedFiles_${user_id}`;
+    const currentWhitelist = JSON.parse(localStorage.getItem(whitelistKey)) || [];
+
+    if (isFavorite) {
+      // Xoá khỏi whitelist
+      const updatedWhitelist = currentWhitelist.filter(item => item.id !== productDetail.id);
+      localStorage.setItem(whitelistKey, JSON.stringify(updatedWhitelist));
+      setIsFavorite(false);
+    } else {
+      // Thêm vào whitelist
+      const newItem = {
+        id: productDetail.id,
+        fileName: productDetail.title,
+        title: productDetail.title,
+        category: productDetail.category || "Chưa cập nhật",
+        price: productDetail.price || "Chưa cập nhật",
+        description: productDetail.description || "Chưa cập nhật",
+        fileUrl: productDetail.fileUrl || "",
+        type: "whitelist",
+      };
+      const updatedWhitelist = [newItem, ...currentWhitelist.filter(item => item.id !== newItem.id)];
+      localStorage.setItem(whitelistKey, JSON.stringify(updatedWhitelist));
+      setIsFavorite(true);
+    }
+  };
 
   // Hàm gửi bình luận
   const handleSendComment = () => {
@@ -58,14 +86,21 @@ const ProductDetails = () => {
   };
 
   useEffect(() => {
-    fetch("/src/apis/apiProducts.json")
+    fetch(`http://localhost:5000/api/v1/documents/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    })
       .then((response) => response.json())
       .then((data) => {
-        const product = data.find((item) => item.id.toString() === id);
-        setProductDetail(product);
+        // Giả sử API trả về { data: { document: {...} } }
+        setProductDetail(data.data?.document || null);
       })
       .catch((error) => console.error("Lỗi khi lấy dữ liệu:", error));
   }, [id]);
+  // console.log('Product Detail:', productDetail);
 
   if (!productDetail) {
     return <p className="text-center mt-5 text-lg text-gray-500">Đang tải...</p>;
@@ -140,8 +175,8 @@ const ProductDetails = () => {
         {/* Ảnh và ảnh phụ */}
         <div className="w-full lg:w-1/2 flex flex-col items-center">
           <img
-            src={productDetail.image}
-            alt={productDetail.name}
+            src={productDetail.fileUrl}
+            alt={productDetail.title}
             className="w-48 h-64 sm:w-64 sm:h-80 md:w-72 md:h-[350px] object-cover rounded-xl shadow-lg bg-blue-100"
           />
           <div className="flex justify-center gap-4 mt-4">
@@ -159,8 +194,8 @@ const ProductDetails = () => {
             ))}
           </div>
           <div className="flex gap-4 mt-4 text-blue-700 text-sm">
-            <span><UserIcon className="inline w-4 h-4 mr-1" /> Đã xem: <b>{productDetail.viewed}</b></span>
-            <span><ThumbsUpIcon className="inline w-4 h-4 mr-1" /> Đã tải: <b>{productDetail.downloaded}</b></span>
+            <span><UserIcon className="inline w-4 h-4 mr-1" /> Đã xem: <b>{productDetail.viewCount}</b></span>
+            <span><ThumbsUpIcon className="inline w-4 h-4 mr-1" /> Đã tải: <b>{productDetail.downloadCount}</b></span>
             <span><ShareIcon className="inline w-4 h-4 mr-1" /> Còn lại: <b>{productDetail.in_stock}</b></span>
           </div>
         </div>
@@ -169,18 +204,22 @@ const ProductDetails = () => {
           ref={pdfRef}
           className="w-full lg:w-1/2 flex flex-col justify-center pl-0 lg:pl-6 mt-6 lg:mt-0 bg-white p-6 rounded-xl shadow-xl border border-blue-100"
         >
-          <h2 className="text-3xl font-bold text-[#2563eb] mb-3">{productDetail.name}</h2>
+          <h2 className="text-3xl font-bold text-[#2563eb] mb-3">{productDetail.title}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-base sm:text-lg text-blue-900 mb-4">
-            <p><span className="font-semibold">Thể loại:</span> {productDetail.category || "Đang cập nhật"}</p>
+            <p><span className="font-semibold">Thể loại:</span>{" "}
+              {Array.isArray(productDetail.categoryIds) && productDetail.categoryIds.length > 0
+                ? productDetail.categoryIds.map(cat => cat.name).join(", ")
+                : "Đang cập nhật"}
+            </p>
             <p><span className="font-semibold">Mã sản phẩm:</span> {productDetail.id_product || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Nhà cung cấp:</span> {productDetail.name_supplier || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Tác giả:</span> {productDetail.author || "Đang cập nhật"}</p>
+            <p><span className="font-semibold">Tác giả:</span> {productDetail.authorName || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Dịch giả:</span> {productDetail.translator || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Nhà xuất bản:</span> {productDetail.name_nxb || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Năm xuất bản:</span> {productDetail.year_xb || "Đang cập nhật"}</p>
+            <p><span className="font-semibold">Năm xuất bản:</span> {productDetail.publicationYear || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Ngôn ngữ:</span> {productDetail.language || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Trọng lượng:</span> {productDetail.weight ? productDetail.weight + "g" : "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Kích thước:</span> {productDetail.size || "Đang cập nhật"}</p>
+            <p><span className="font-semibold">Kích thước:</span> {productDetail.averageRating || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Số trang:</span> {productDetail.number_pages || "Đang cập nhật"}</p>
             <p><span className="font-semibold">Số lượng còn lại:</span> {productDetail.in_stock || "Đang cập nhật"}</p>
           </div>
@@ -196,7 +235,7 @@ const ProductDetails = () => {
             </button>
             <button
               className={`px-6 py-3 flex items-center justify-center bg-[#eaf1fb] rounded-lg hover:bg-[#dbeafe] transition shadow border border-blue-200`}
-              onClick={() => setIsFavorite(!isFavorite)}
+              onClick={handleWhitList}
             >
               <Heart
                 fill={isFavorite ? "#ef4444" : "none"}
