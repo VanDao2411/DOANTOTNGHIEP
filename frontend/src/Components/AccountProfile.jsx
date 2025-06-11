@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FiEye, FiEyeOff } from "react-icons/fi"; // Thêm dòng này
 
-function AccountProfile({ setMessage }) {
+function AccountProfile() {
   const [activeTab, setActiveTab] = useState('account');
   const [user, setUser] = useState({
     fullName: "",
@@ -19,6 +20,15 @@ function AccountProfile({ setMessage }) {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+  });
+
+  // eslint-disable-next-line no-unused-vars
+  const [message, setMessage] = useState("");
+
+  const [showPassword, setShowPassword] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
   });
 
   const navigate = useNavigate();
@@ -147,26 +157,40 @@ function AccountProfile({ setMessage }) {
       {activeTab === 'password' && (
         <div>
           <div className="space-y-4">
-            {[
-              { label: "Mật khẩu hiện tại", name: "currentPassword", type: "password" },
-              { label: "Mật khẩu mới", name: "newPassword", type: "password" },
-              { label: "Xác nhận mật khẩu mới", name: "confirmPassword", type: "password" }
-            ].map(({ label, name, type }) => (
-              <div key={name}>
-                <label className="block font-semibold">{label}</label>
-                <input
-                  type={type}
-                  className="w-full p-2 border rounded"
-                  name={name}
-                  value={passwordData[name]}
-                  onChange={handlePasswordInputChange}
-                />
-              </div>
-            ))}
+            { [
+                { label: "Mật khẩu hiện tại", name: "currentPassword" },
+                { label: "Mật khẩu mới", name: "newPassword" },
+                { label: "Xác nhận mật khẩu mới", name: "confirmPassword" }
+              ].map(({ label, name }) => (
+                <div key={name} className="relative">
+                  <label className="block font-semibold mb-1">{label}</label>
+                  <input
+                    type={showPassword[name] ? "text" : "password"}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10"
+                    name={name}
+                    value={passwordData[name]}
+                    onChange={handlePasswordInputChange}
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2 top-8 text-gray-500"
+                    tabIndex={-1}
+                    onClick={() =>
+                      setShowPassword((prev) => ({
+                        ...prev,
+                        [name]: !prev[name],
+                      }))
+                    }
+                  >
+                    {showPassword[name] ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
+              ))}
 
             <div className="text-center">
               <button
-                className="w-full mt-4 bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+                className="w-full mt-4 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
                 onClick={handlePasswordChange}
               >
                 Đổi Mật Khẩu

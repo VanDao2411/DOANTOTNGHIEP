@@ -39,7 +39,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Giới hạn số lượng request từ một IP
 const limiter = rateLimit({
-    max: 100, // Tối đa 100 request
+    max: 1000, // Tối đa 100 request
     windowMs: 60 * 60 * 1000, // Trong 1 giờ
     message: 'Quá nhiều request từ IP này, vui lòng thử lại sau 1 giờ!'
 });

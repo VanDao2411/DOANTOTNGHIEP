@@ -1,20 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import apiProducts from "../../apis/apiProducts.json";
-
-// Hàm tạo slug từ tên chủ đề
-const toSlug = (str) =>
-  str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-const categories = [
-  "Tất cả",
-  ...Array.from(new Set(apiProducts.map((b) => b.category))),
-];
+import { FaBook, FaDownload, FaTags, FaLaptopCode, FaFlask, FaGlobe, FaPaintBrush, FaMusic, FaLeaf, FaHeart, FaHistory, FaUserAlt, FaHome } from "react-icons/fa";
 
 const timeTabs = [
   { label: "Top ngày", value: "day" },
@@ -26,80 +12,137 @@ const Books = () => {
   const navigate = useNavigate();
   const { slug: urlSlug } = useParams();
 
-  // Tìm chủ đề theo slug trên url, nếu không có thì mặc định "Tất cả"
-  const findCategoryBySlug = (slug) => {
-    if (!slug) return "Tất cả";
-    const found = categories.find((cat) => toSlug(cat) === slug);
-    return found || "Tất cả";
-  };
-
-  const [selectedCategory, setSelectedCategory] = useState(findCategoryBySlug(urlSlug));
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState({ _id: "all", name: "Tất cả", slug: "tat-ca" });
   const [selectedTab, setSelectedTab] = useState("day");
-  // eslint-disable-next-line no-unused-vars
-  const [slug, setSlug] = useState(urlSlug || toSlug("Tất cả"));
 
-  // Khi urlSlug thay đổi, cập nhật state
   useEffect(() => {
-    setSelectedCategory(findCategoryBySlug(urlSlug));
-    setSlug(urlSlug || toSlug("Tất cả"));
-  }, [urlSlug]);
+    fetch("http://localhost:5000/api/v1/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        const apiCategories = data.data.categories || [];
+        setCategories([{ _id: "all", name: "Tất cả", slug: "tat-ca" }, ...apiCategories]);
+      })
+      .catch((err) => {
+        setCategories([{ _id: "all", name: "Tất cả", slug: "tat-ca" }]);
+        console.error("Lỗi khi lấy category:", err);
+      });
+  }, []);
 
-  // Lọc sách theo chủ đề
+  useEffect(() => {
+    fetch("http://localhost:5000/api/v1/documents", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setProducts(data.data.documents || []))
+      .catch((err) => {
+        setProducts([]);
+        console.error("Lỗi khi lấy dữ liệu:", err);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!categories.length) return;
+    const found =
+      categories.find((cat) => cat.slug === (urlSlug || "tat-ca")) ||
+      categories[0];
+    setSelectedCategory(found);
+  }, [urlSlug, categories]);
+
   const filteredBooks =
-    selectedCategory === "Tất cả"
-      ? apiProducts
-      : apiProducts.filter((b) => b.category === selectedCategory);
+    selectedCategory._id === "all"
+      ? products
+      : products.filter(
+          (b) =>
+            Array.isArray(b.categoryIds) &&
+            b.categoryIds.some((cat) => cat._id === selectedCategory._id)
+        );
 
-  // Sắp xếp sách theo lượt download (giả lập top)
   const sortedBooks = [...filteredBooks].sort(
-    (a, b) =>
-      parseInt(b.downloaded.replace(/[^\d]/g, "")) -
-      parseInt(a.downloaded.replace(/[^\d]/g, ""))
+    (a, b) => (b.downloadCount || 0) - (a.downloadCount || 0)
   );
 
+  const getCategoryIcon = (categoryName) => {
+    switch (categoryName?.toLowerCase()) {
+      case "khoa học":
+        return <FaFlask className="text-green-600" />;
+      case "công nghệ":
+        return <FaLaptopCode className="text-blue-600" />;
+      case "văn học":
+        return <FaBook className="text-purple-600" />;
+      case "ngoại ngữ":
+        return <FaGlobe className="text-teal-600" />;
+      case "nghệ thuật":
+        return <FaPaintBrush className="text-pink-600" />;
+      case "âm nhạc":
+        return <FaMusic className="text-yellow-500" />;
+      case "môi trường":
+        return <FaLeaf className="text-green-500" />;
+      case "tình yêu":
+        return <FaHeart className="text-red-500" />;
+      case "lịch sử":
+        return <FaHistory className="text-orange-700" />;
+      case "hoạt hình":
+        return <FaUserAlt className="text-pink-400" />;
+      case "cuộc sống":
+        return <FaHome className="text-green-700" />;
+      default:
+        return <FaBook className="text-blue-400" />;
+    }
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Navbar bên trái ẩn trên mobile, hiện trên md trở lên */}
-      <aside className="hidden md:block w-60 bg-white border-r p-6 h-screen sticky top-0 overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4">Chủ đề sách</h2>
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+      {/* Sidebar category */}
+      <aside className="hidden md:block w-64 bg-white border-r p-6 h-screen sticky top-0 overflow-y-auto shadow-md">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-700">
+          <FaTags className="text-blue-500" /> Chủ đề sách
+        </h2>
         <ul>
           {categories.map((cat) => (
-            <li key={cat}>
+            <li key={cat._id}>
               <button
-                className={`w-full text-left px-3 py-2 rounded mb-1 transition ${
-                  selectedCategory === cat
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "hover:bg-blue-100"
-                }`}
+                className={`w-full text-left px-4 py-2 rounded-lg mb-2 flex items-center gap-2 transition font-medium
+                  ${
+                    selectedCategory._id === cat._id
+                      ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow"
+                      : "bg-blue-50 hover:bg-blue-200 text-blue-700"
+                  }
+                `}
                 onClick={() => {
-                  setSelectedCategory(cat);
-                  setSlug(toSlug(cat));
-                  // Đẩy slug lên url
-                  if (cat === "Tất cả") navigate("/books");
-                  else navigate(`/books/${toSlug(cat)}`);
+                  if (cat._id === "all") navigate("/books");
+                  else navigate(`/books/${cat.slug}`);
                 }}
               >
-                {cat}
+                {getCategoryIcon(cat.name)}
+                {cat.name}
               </button>
             </li>
           ))}
         </ul>
       </aside>
 
-      {/* Nội dung bên phải có scroll riêng */}
-      <main className="flex-1 p-8 h-screen overflow-y-auto scrollbar-hide">
-        {/* Tabs top ngày/tuần/tháng */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Danh sách sách</h1>
+      {/* Main content */}
+      <main className="flex-1 p-6 md:p-10 h-screen overflow-y-auto">
+        {/* Tabs */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+          <h1 className="text-3xl font-bold text-blue-700">Danh sách sách</h1>
           <div className="flex gap-2">
             {timeTabs.map((tab) => (
               <button
                 key={tab.value}
-                className={`px-4 py-2 rounded ${
-                  selectedTab === tab.value
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "bg-white border hover:bg-blue-100"
-                }`}
+                className={`px-4 py-2 rounded-lg font-semibold transition
+                  ${
+                    selectedTab === tab.value
+                      ? "bg-blue-600 text-white shadow"
+                      : "bg-white border border-blue-200 hover:bg-blue-100 text-blue-700"
+                  }
+                `}
                 onClick={() => setSelectedTab(tab.value)}
               >
                 {tab.label}
@@ -107,32 +150,59 @@ const Books = () => {
             ))}
           </div>
         </div>
-        {/* Danh sách sách */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Book grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
           {sortedBooks.map((book) => (
             <div
-              key={book.id}
-              className="bg-white rounded-xl shadow p-4 flex flex-col hover:shadow-lg transition"
+              key={book._id}
+              onClick={() => navigate(`/product/${book._id}`)}
+              className="bg-white rounded-2xl shadow-lg border border-blue-100 flex flex-col hover:shadow-2xl transition group relative overflow-hidden"
             >
               <img
-                src={book.image}
-                alt={book.name}
-                className="h-48 w-full object-cover rounded mb-3"
+                src={book.fileUrl}
+                alt={book.title}
+                className="h-52 w-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform bg-blue-50"
               />
-              <div className="font-bold text-lg mb-1">{book.name}</div>
-              <div className="text-sm text-gray-500 mb-2">{book.author}</div>
-              <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-2">
-                <span>Thể loại: {book.category}</span>
-                <span>Lượt tải: {book.downloaded}</span>
-                <span>Lượt xem: {book.viewed}</span>
+              <div className="p-4 flex-1 flex flex-col">
+                <div className="font-bold text-lg mb-1 text-blue-800 truncate" title={book.title}>
+                  {book.title}
+                </div>
+                <div className="text-sm text-blue-500 mb-2 truncate">{book.authorName}</div>
+                <div className="flex flex-wrap gap-2 text-xs text-blue-700 mb-2">
+                  <span>
+                    <span className="font-semibold">Thể loại:</span>{" "}
+                    <span className="text-blue-500">
+                      {Array.isArray(book.categoryIds) && book.categoryIds.length > 0
+                        ? book.categoryIds.map((cat) => cat.name).join(", ")
+                        : "Đang cập nhật"}
+                    </span>
+                  </span>
+                  <span>
+                    <span className="font-semibold">Tải:</span>{" "}
+                    <span className="text-blue-500">{book.downloadCount ?? 0}</span>
+                  </span>
+                  <span>
+                    <span className="font-semibold">Xem:</span>{" "}
+                    <span className="text-blue-500">{book.viewCount ?? 0}</span>
+                  </span>
+                </div>
+                <div className="line-clamp-3 text-gray-600 text-sm mb-3">{book.description}</div>
+                <button
+                  className="mt-auto flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#60a5fa] text-white rounded-lg hover:from-[#1d4ed8] hover:to-[#3b82f6] transition font-semibold shadow"
+                  title="Tải xuống"
+                >
+                  <FaDownload className="text-base" />
+                  Download
+                </button>
               </div>
-              <div className="line-clamp-3 text-gray-700 text-sm mb-2">{book.description}</div>
-              <button className="mt-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Dowload
-              </button>
             </div>
           ))}
         </div>
+        {sortedBooks.length === 0 && (
+          <div className="text-center text-blue-700 mt-12 text-lg font-semibold">
+            Không có sách nào trong chủ đề này.
+          </div>
+        )}
       </main>
     </div>
   );

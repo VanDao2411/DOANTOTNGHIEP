@@ -41,7 +41,7 @@ const documentSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: 'none',
-            enum: ['english', 'french', 'spanish', 'russian', 'none']        
+            enum: ['english', 'french', 'spanish', 'russian','vietnam','none'],        
         },
         fileUrl: {
             type: String,

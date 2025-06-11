@@ -2,18 +2,34 @@ import React, { useState, useEffect, useRef } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import apiProducts from "../apis/apiProducts.json";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../Context/CartProvide";
 const centerIndex = 3;
 
 const HotProducts = () => {
-    const products = apiProducts.slice(0, 10); // Lấy 10 sản phẩm đầu tiên
+    const [products, setProducts] = useState([]); // Lấy từ API
     const [center, setCenter] = useState(centerIndex);
     const timerRef = useRef();
     const navigate = useNavigate();
     const { addToCart, addToHistory } = useCart();
     const [message, setMessage] = useState('');
+
+    // Gọi API lấy sản phẩm hot khi component mount
+    useEffect(() => {
+        fetch('http://localhost:5000/api/v1/documents', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            }
+        })
+            .then((res) => res.json())
+            .then((data) => setProducts(data.data.documents || []))
+            .catch((err) => {
+                setProducts([]);
+                console.error('Lỗi khi lấy dữ liệu:', err);
+            });
+    }, []);
 
     // Khi click vào sản phẩm, đưa nó ra giữa
     const handleClick = (idx) => {
@@ -32,11 +48,12 @@ const HotProducts = () => {
 
     // Tự động chuyển đổi sản phẩm sau 5 giây
     useEffect(() => {
+        if (products.length === 0) return;
         timerRef.current = setTimeout(() => {
             handleNext();
         }, 5000);
         return () => clearTimeout(timerRef.current);
-    }, [center]);
+    }, [center, products.length]);
 
     const handleProductClick = (product) => {
         addToHistory(product);
@@ -47,6 +64,14 @@ const HotProducts = () => {
         setMessage('Download thành công!');
         setTimeout(() => setMessage(''), 3000);
     };
+
+    if (products.length === 0) {
+        return (
+            <div className="flex justify-center items-center h-[340px]">
+                <span>Đang tải sản phẩm...</span>
+            </div>
+        );
+    }
 
     return (
         <div className="relative flex justify-center items-center h-[340px] select-none">
@@ -116,8 +141,8 @@ const HotProducts = () => {
                             onClick={() => handleClick(idx)}
                         >
                             <img
-                                src={product.image}
-                                alt={product.name}
+                                src={product.fileUrl}
+                                alt={product.title}
                                 className={`rounded-xl shadow-lg transition-all duration-300`}
                                 onClick={() => handleProductClick(product)}
                                 style={{
@@ -128,7 +153,7 @@ const HotProducts = () => {
                                                 ? 180
                                                 : Math.abs(displayDiff) === 2
                                                     ? 160
-                                                    : 140, // tăng từ 100 lên 110 cho ảnh ngoài cùng
+                                                    : 140,
                                     height:
                                         displayDiff === 0
                                             ? 260
@@ -136,7 +161,7 @@ const HotProducts = () => {
                                                 ? 240
                                                 : Math.abs(displayDiff) === 2
                                                     ? 220
-                                                    : 200, // tăng từ 120 lên 130 cho ảnh ngoài cùng
+                                                    : 200,
                                     filter:
                                         displayDiff === 0
                                             ? "none"
@@ -155,8 +180,11 @@ const HotProducts = () => {
                                         transition={{ duration: 0.3 }}
                                         className="flex flex-col items-center mt-1 mb-12"
                                     >
-                                        <div className="text-base md:text-lg font-bold text-center">
-                                            {product.name}
+                                        <div
+                                          className="text-base md:text-lg font-bold text-center max-w-[200px] truncate"
+                                          title={product.title}
+                                        >
+                                          {product.title}
                                         </div>
                                         <button
                                             className="mt-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"

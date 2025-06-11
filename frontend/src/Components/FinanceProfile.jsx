@@ -44,14 +44,18 @@ const BANKS = [
 ];
 
 function FinanceProfile() {
-  // State điểm và lịch sử nhiệm vụ
-  const [points, setPoints] = useState(100);
-  const [history, setHistory] = useState([
-    { type: "Đăng ký tài khoản", points: 50, date: "01/06/2025" },
-    { type: "Đăng nhập mỗi ngày", points: 10, date: "03/06/2025" },
-    { type: "Đọc sách", points: 5, date: "03/06/2025" },
-    { type: "Đánh giá sách", points: 5, date: "03/06/2025" },
-  ]);
+  const user_id = localStorage.getItem("user_id");
+  const HISTORY_KEY = `mission_history_${user_id}`;
+  // eslint-disable-next-line no-unused-vars
+  const [points, setPoints] = useState(() => {
+    const p = localStorage.getItem(`points_${user_id}`);
+    return p ? Number(p) : 100;
+  });
+  // eslint-disable-next-line no-unused-vars
+  const [history, setHistory] = useState(() => {
+    const saved = localStorage.getItem(HISTORY_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [showExchange, setShowExchange] = useState(false);
 
   // Thêm state cho form đổi điểm
@@ -75,23 +79,24 @@ function FinanceProfile() {
       icon: <LogInIcon className="text-green-500" size={20} />,
       label: "Đăng nhập mỗi ngày",
       points: 10,
-      done: history.some(h => h.type === "Đăng nhập mỗi ngày" && h.date === "03/06/2025"),
+      done: history.some(h => h.type === "Đăng nhập mỗi ngày" && h.date === new Date().toLocaleDateString("vi-VN")),
     },
     {
       icon: <BookOpenIcon className="text-orange-500" size={20} />,
       label: "Đọc sách",
       points: 5,
-      done: history.some(h => h.type === "Đọc sách" && h.date === "03/06/2025"),
+      done: history.some(h => h.type === "Đọc sách" && h.date === new Date().toLocaleDateString("vi-VN")),
     },
     {
       icon: <StarIcon className="text-yellow-400" size={20} />,
       label: "Đánh giá sách",
       points: 5,
-      done: history.some(h => h.type === "Đánh giá sách" && h.date === "03/06/2025"),
+      done: history.some(h => h.type === "Đánh giá sách" && h.date === new Date().toLocaleDateString("vi-VN")),
     },
   ];
 
   // Đổi điểm sang tiền (giả sử 1 điểm = 100đ)
+  // eslint-disable-next-line no-unused-vars
   const money = points * 100;
 
   // Xử lý xác nhận đổi điểm
@@ -99,6 +104,10 @@ function FinanceProfile() {
     const pointsNumber = Number(exchangePoints);
     if (pointsNumber < 1000) {
       setExchangeMsg("Bạn cần nhập ít nhất 1.000 điểm để rút tiền!");
+      return;
+    }
+    if (points < pointsNumber) {
+      setExchangeMsg("Bạn chưa đủ điểm để đổi!");
       return;
     }
     if (!bankName.trim() || !bankAccount.trim()) {
@@ -112,6 +121,30 @@ function FinanceProfile() {
     // setPoints(points - exchangePoints); // Nếu muốn trừ điểm
   };
 
+  const handleReceiveMission = (mission) => {
+    // Nếu đã nhận rồi thì không làm gì
+    if (missions.find(m => m.label === mission.label && m.done)) return;
+
+    // Cộng điểm
+    const newPoints = points + mission.points;
+    setPoints(newPoints);
+    localStorage.setItem(`points_${user_id}`, newPoints.toString());
+
+    // Thêm vào lịch sử và lưu vào localStorage
+    const today = new Date();
+    const dateStr = today.toLocaleDateString("vi-VN");
+    const newHistory = [
+      ...history,
+      { type: mission.label, points: mission.points, date: dateStr }
+    ];
+    setHistory(newHistory);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+
+    // Thông báo hoàn thành
+    setExchangeMsg(`Bạn đã hoàn thành nhiệm vụ "${mission.label}" và nhận được +${mission.points} điểm!`);
+    setTimeout(() => setExchangeMsg(""), 3000);
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen w-full p-4">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -120,7 +153,9 @@ function FinanceProfile() {
           <div>
             <div className="text-lg font-semibold text-blue-700">Điểm thưởng của bạn</div>
             <div className="text-3xl font-bold text-orange-500">{points} điểm</div>
-            <div className="text-gray-500 mt-1">Tương đương: <span className="font-semibold text-green-600">{money.toLocaleString()}đ</span></div>
+            <div className="text-gray-500 mt-1">
+              Tương đương: <span className="font-semibold text-green-600">{(points * 100).toLocaleString()}đ</span>
+            </div>
           </div>
           <div className="flex flex-col items-end">
             <button
@@ -215,7 +250,7 @@ function FinanceProfile() {
                 Đóng
               </button>
               {exchangeMsg && (
-                <div className="text-red-500 text-sm mt-2">{exchangeMsg}</div>
+                <div className="text-green-600 text-sm mt-2">{exchangeMsg}</div>
               )}
             
             </div>
@@ -236,7 +271,12 @@ function FinanceProfile() {
                 {m.done ? (
                   <span className="text-green-500 font-semibold">Đã nhận</span>
                 ) : (
-                  <button className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">Nhận</button>
+                  <button
+                    className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                    onClick={() => handleReceiveMission(m)}
+                  >
+                    Nhận
+                  </button>
                 )}
               </div>
             ))}

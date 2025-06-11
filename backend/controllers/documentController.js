@@ -21,9 +21,6 @@ exports.getAllDocuments = catchAsync(async (req, res, next) => {
     }).populate({
         path: 'categoryIds',
         select: 'name' // Chỉ cần tên danh mục
-    }).populate({
-        path: 'tagIds',
-        select: 'name' // Chỉ cần tên danh mục
     });
 
     const documents = await features.query;

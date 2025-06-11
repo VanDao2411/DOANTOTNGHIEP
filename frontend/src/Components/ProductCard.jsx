@@ -12,20 +12,24 @@ const ProductCard = ({ product, onClick, onDownload }) => {
       style={{ minHeight: '360px', maxWidth: '340px', flexShrink: 0 }}
     >
       <img
-        src={product.image}
-        alt={product.name}
+        src={product.fileUrl}
+        alt={product.title}
         className="w-full h-[190px] object-cover rounded-t-2xl bg-[#eaf1fb]"
       />
       <div className="px-4 py-3 flex-1 flex flex-col justify-between">
-        <h3 className="text-[#2563eb] font-bold text-lg truncate mb-1">{product.name}</h3>
-        <div className="text-xs text-blue-500 mb-1 truncate">{product.author}</div>
+        <h3 className="text-[#2563eb] font-bold text-lg truncate mb-1">{product.title}</h3>
+
         <div className="flex flex-wrap gap-2 text-xs text-blue-700 mb-2">
           <span>
             <span className="font-semibold">Thể loại:</span>{" "}
-            <span className="text-[#2563eb]">{product.category}</span>
+            <span className="text-[#2563eb]">
+              {Array.isArray(product.categoryIds) && product.categoryIds.length > 0
+                ? product.categoryIds.map(cat => cat.name).join(", ")
+                : "Đang cập nhật"}
+            </span>
           </span>
           <span>
-            <span className="font-semibold">Lượt tải:</span>{" "}
+            <span className="font-semibold">Tác giả: {product.authorName} </span>{" "}
             <span className="text-[#2563eb]">{product.downloaded}</span>
           </span>
         </div>

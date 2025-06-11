@@ -25,16 +25,32 @@ export default function UserProfile() {
     }
   };
 
+  const rawUsername = localStorage.getItem("username");
+  const username =
+    rawUsername && rawUsername.trim().length > 0
+      ? rawUsername.trim()
+      : null;
+
   return (
     <div className="flex min-h-screen bg-gray-100 mt-5 rounded-lg">
       {/* Sidebar */}
       <div className="w-1/5 bg-white p-6 shadow-md">
         <div className="flex flex-col items-center mb-4">
-          <img
-            src={avatar}
-            alt="Avatar"
-            className="w-24 h-24 rounded-full object-cover mb-2"
-          />
+          {avatar ? (
+            <img
+              src={avatar}
+              alt="Avatar"
+              className="w-24 h-24 rounded-full object-cover mb-2"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-2 text-4xl text-blue-500 font-bold select-none">
+              {username ? username.charAt(0).toUpperCase() : "U"}
+            </div>
+          )}
+          {/* Hiển thị username dưới avatar */}
+          <div className="font-semibold text-blue-700 mb-2">
+            {username || "Tên người dùng"}
+          </div>
           <label
             htmlFor="avatar-upload"
             className="cursor-pointer px-4 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
