@@ -1,5 +1,4 @@
 import { useState } from "react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import ForgotForm from "../../Components/ForgotForm";
@@ -8,7 +7,7 @@ import RegisterForm from "../../Components/RegisterForm";
 
 const API_URL = "http://localhost:5000"; // Hard-code URL thay cho process.env
 
-export default function AuthOverlay() {
+export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [showForgot, setShowForgot] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -242,7 +241,7 @@ export default function AuthOverlay() {
 
       {/* Thông báo thành công */}
       <AnimatePresence>
-        {showSuccess && (
+        {successMessage && ( // <<<--- SỬ DỤNG 'successMessage' STATE
           <motion.div
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -266,6 +265,15 @@ export default function AuthOverlay() {
         >
           <div className="p-10">
             <AnimatePresence>
+              {error && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mb-4 p-3 bg-red-100 text-red-700 border border-red-200 rounded-lg text-sm text-center">
+                      {error}
+                  </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Quên mật khẩu và Đăng nhập/Đăng ký */}
+            <AnimatePresence mode="wait">
               {showForgot ? (
                 <ForgotForm
                   forgotEmail={forgotEmail}

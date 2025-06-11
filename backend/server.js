@@ -1,13 +1,8 @@
 const dotenv = require('dotenv');
 dotenv.config()
 
-console.log('--- ĐANG KIỂM TRA BIẾN MÔI TRƯỜNG TRÊN SERVER ---');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('MONGODB_URI có tồn tại không?:', !!process.env.MONGODB_URI);
-console.log('Giá trị MONGODB_URI (20 ký tự đầu):', process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'undefined');
-console.log('----------------------------------------------------');
-
-
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./config/swagger');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -32,6 +27,7 @@ const savedDocumentRoutes = require('./routes/savedDocumentRoutes');
 const notificationRoutes = require('./routes/notificationRoutes'); 
 
 const app = express();
+app.set('trust proxy', 1); 
 
 connectDB();
 
@@ -63,8 +59,10 @@ app.use(hpp({
     ]
 }));
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
 app.get('/', (req, res) => {
-    res.send('API cho Trang Web Thư Viện Online đang chạy...');
+    res.redirect('/api-docs');
 });
 
 app.use('/api/v1/auth', authRoutes);

@@ -8,7 +8,6 @@ import Admin from "./Pages/Admin" //
 
 
 function App() {
-
   return (
     <AvatarProvider>
       <div className="w-full bg-white ">
@@ -42,4 +41,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
