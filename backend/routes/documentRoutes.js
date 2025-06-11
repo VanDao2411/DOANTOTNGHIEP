@@ -3,7 +3,7 @@ const router = express.Router();
 const documentController = require('../controllers/documentController');
 const reviewRouter = require('./reviewRoutes');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
-const { uploadDocumentFiles } = require('../middlewares/uploadMiddleware');
+const { uploadCoverImage } = require('../middlewares/uploadMiddleware');
 const { validate } = require('../middlewares/validationMiddleware');
 const { createDocumentRules, updateDocumentRules } = require('../middlewares/validators/documentValidator');
 
@@ -121,7 +121,7 @@ router.use('/:documentId/reviews', reviewRouter);
 router
     .route('/')
     .get(documentController.getAllDocuments)
-    .post(protect, uploadDocumentFiles, createDocumentRules, validate, documentController.createDocument); 
+    .post(protect, uploadCoverImage, createDocumentRules, validate, documentController.createDocument); 
 
 
 /**
@@ -195,10 +195,34 @@ router
 router
     .route('/:id')
     .get(documentController.getDocument)
-    .patch(protect, uploadDocumentFiles, createDocumentRules, validate, documentController.updateDocument)
+    .patch(protect, uploadCoverImage, createDocumentRules, validate, documentController.updateDocument)
     .delete(protect, restrictTo('admin'), documentController.deleteDocument);
 
 // Ví dụ route tìm kiếm
 // router.get('/search/results', documentController.searchDocuments);
+
+router.get('/test-populate/:id', async (req, res) => {
+    try {
+        console.log(`--- Đang test populate cho document ID: ${req.params.id} ---`);
+
+        const doc = await require('../models/Document').findById(req.params.id)
+            .populate('authorId')
+            .populate('categoryIds')
+            .populate('tagIds')
+            .populate('uploader');
+
+        if (!doc) {
+            return res.status(404).json({ message: 'Document not found' });
+        }
+
+        console.log('--- Dữ liệu đã được Populate: ---');
+        console.log(doc); // In toàn bộ document đã populate ra console của server
+
+        res.status(200).json(doc);
+    } catch (err) {
+        console.error('--- LỖI TRONG ROUTE TEST ---', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 module.exports = router;

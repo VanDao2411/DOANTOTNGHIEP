@@ -21,6 +21,9 @@ exports.getAllDocuments = catchAsync(async (req, res, next) => {
     }).populate({
         path: 'categoryIds',
         select: 'name' // Chỉ cần tên danh mục
+    }).populate({
+        path: 'tagIds',
+        select: 'name' // Chỉ cần tên danh mục
     });
 
     const documents = await features.query;
@@ -37,9 +40,9 @@ exports.getAllDocuments = catchAsync(async (req, res, next) => {
 exports.getDocument = catchAsync(async (req, res, next) => {
     const document = await Document.findById(req.params.id)
         .populate({ path: 'uploader', select: 'username fullName avatarUrl' })
-        .populate({ path: 'authorId', select: 'name slug bio' })
-        .populate({ path: 'categoryIds', select: 'name slug' })
-        .populate({ path: 'tagIds', select: 'name slug' });
+        .populate({ path: 'authorId', select: 'name' })
+        .populate({ path: 'categoryIds', select: 'name' })
+        .populate({ path: 'tagIds', select: 'name' });
 
     if (!document) {
         return next(new AppError('Không tìm thấy tài liệu với ID này', 404));
@@ -73,10 +76,8 @@ exports.createDocument = catchAsync(async (req, res, next) => {
 
     // 3. Xử lý thông tin file upload từ req.files (nếu có)
     if (req.files) {
-        if (req.files.coverImage) {
-            // Lưu đường dẫn file ảnh bìa vào database
-            // Ví dụ: 'uploads/images/coverImage-userId-timestamp.jpeg'
-            documentData.coverImageUrl = `uploads/images/${req.files.coverImage[0].filename}`;
+        if (req.file && req.file.fieldname === 'coverImage') {
+        documentData.coverImageUrl = req.file.path; // <<<--- LẤY URL TỪ CLOUDINARY
         }
         if (req.files.documentFile) {
             // Lưu đường dẫn file tài liệu vào database
@@ -148,6 +149,10 @@ exports.updateDocument = catchAsync(async (req, res, next) => {
     if ('authorId' in req.body) {
         const author = await Author.findById(req.body.authorId);
         documentData.authorName = author ? author.name : null;
+    }
+
+    if (req.file && req.file.fieldname === 'coverImage') {
+        documentData.coverImageUrl = req.file.path; // <<<--- LẤY URL TỪ CLOUDINARY
     }
     
     const updatedDoc = await Document.findByIdAndUpdate(req.params.id, documentData, {

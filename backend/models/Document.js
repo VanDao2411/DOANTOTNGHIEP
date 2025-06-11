@@ -17,7 +17,6 @@ const documentSchema = new mongoose.Schema(
         authorId: { 
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Author',
-            // required: true,
         },
         publisher: {
             type: String,
