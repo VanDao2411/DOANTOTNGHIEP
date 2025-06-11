@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaBook, FaDownload, FaTags } from "react-icons/fa";
+import { FaBook, FaDownload, FaTags, FaLaptopCode, FaFlask, FaGlobe, FaPaintBrush, FaMusic, FaLeaf, FaHeart, FaHistory, FaUserAlt, FaHome } from "react-icons/fa";
 
 const timeTabs = [
   { label: "Top ngày", value: "day" },
@@ -67,6 +67,35 @@ const Books = () => {
     (a, b) => (b.downloadCount || 0) - (a.downloadCount || 0)
   );
 
+  const getCategoryIcon = (categoryName) => {
+    switch (categoryName?.toLowerCase()) {
+      case "khoa học":
+        return <FaFlask className="text-green-600" />;
+      case "công nghệ":
+        return <FaLaptopCode className="text-blue-600" />;
+      case "văn học":
+        return <FaBook className="text-purple-600" />;
+      case "ngoại ngữ":
+        return <FaGlobe className="text-teal-600" />;
+      case "nghệ thuật":
+        return <FaPaintBrush className="text-pink-600" />;
+      case "âm nhạc":
+        return <FaMusic className="text-yellow-500" />;
+      case "môi trường":
+        return <FaLeaf className="text-green-500" />;
+      case "tình yêu":
+        return <FaHeart className="text-red-500" />;
+      case "lịch sử":
+        return <FaHistory className="text-orange-700" />;
+      case "hoạt hình":
+        return <FaUserAlt className="text-pink-400" />;
+      case "cuộc sống":
+        return <FaHome className="text-green-700" />;
+      default:
+        return <FaBook className="text-blue-400" />;
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       {/* Sidebar category */}
@@ -90,7 +119,7 @@ const Books = () => {
                   else navigate(`/books/${cat.slug}`);
                 }}
               >
-                <FaBook className="text-blue-400" />
+                {getCategoryIcon(cat.name)}
                 {cat.name}
               </button>
             </li>
@@ -126,6 +155,7 @@ const Books = () => {
           {sortedBooks.map((book) => (
             <div
               key={book._id}
+              onClick={() => navigate(`/product/${book._id}`)}
               className="bg-white rounded-2xl shadow-lg border border-blue-100 flex flex-col hover:shadow-2xl transition group relative overflow-hidden"
             >
               <img

@@ -5,6 +5,7 @@ import AdminDocuments from "./AdminDocuments";
 import AdminStats from "./AdminStats";
 import AdminCategories from "./AdminCategories";
 import AdminUsers from "./AdminUsers";
+import logo from "../assets/logo.png"; // Thay bằng đường dẫn đến logo của bạn
 
 export default function Admin() {
     const [activeTab, setActiveTab] = useState("stats");
@@ -291,11 +292,10 @@ export default function Admin() {
                     {/* Logo bên trái */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <img
-                            src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo_TV_2015.png"
+                           src={logo}
                             alt="Logo"
-                            className="h-10 w-10 object-contain"
+                            className="h-10 w-24 object-contain ml-5"
                         />
-                        <span className="font-bold text-xl text-[#e95834]">Admin Panel</span>
                     </div>
                     {/* Thanh search ở giữa */}
                     <div className="flex-1 flex justify-center">

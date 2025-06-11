@@ -34,11 +34,23 @@ const Product = () => {
   };
 
   const handleDownload = (product) => {
-    // addToCart(product);
-    setMessage('Download thành công!');
+    const pointsKey = `points_${user_id}`;
+    let currentPoints = parseInt(localStorage.getItem(pointsKey) || "100", 10);
+
+    if (currentPoints < 5) {
+      setMessage("Bạn không đủ điểm để tải tài liệu!");
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    // Trừ điểm
+    currentPoints -= 5;
+    localStorage.setItem(pointsKey, currentPoints.toString());
+
+    setMessage('Download thành công! Bạn còn ' + currentPoints + ' điểm.');
+
     const whitelistKey = `uploadedFiles_${user_id}`;
     const currentWhitelist = JSON.parse(localStorage.getItem(whitelistKey)) || [];
-    console.log('Download:', product);
     const newItem = {
       id: product._id,
       fileName: product.name,
@@ -57,6 +69,13 @@ const Product = () => {
   const handleShowMore = () => {
     setVisibleCount((prev) => prev + 5);
   };
+
+  // Khởi tạo điểm nếu chưa có
+  useEffect(() => {
+    if (user_id && !localStorage.getItem(`points_${user_id}`)) {
+      localStorage.setItem(`points_${user_id}`, "100");
+    }
+  }, [user_id]);
 
   return (
     <div className="mt-10 px-5">

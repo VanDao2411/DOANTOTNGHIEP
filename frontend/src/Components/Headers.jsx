@@ -70,7 +70,7 @@ const Headers = () => {
     // Cập nhật username khi localStorage thay đổi (đăng nhập/đăng ký thành công)
     useEffect(() => {
         const syncUsername = () => {
-            setUsername(localStorage.getItem(`username_${user_id}`)|| "");
+            setUsername(localStorage.getItem(`username_${user_id}`) || "");
         };
         window.addEventListener("usernameChanged", syncUsername);
         window.addEventListener("storage", syncUsername);
@@ -170,17 +170,11 @@ const Headers = () => {
                         onClick={() => navigate("/user-profile")}
                         title="Trang cá nhân"
                     >
-                        {avatar ? (
-                            <img
-                                src={avatar}
-                                className="w-full h-full object-cover rounded-full"
-                                alt=""
-                            />
-                        ) : (
-                            <span>
-                                {username.charAt(0).toUpperCase()}
-                            </span>
-                        )}
+                        <img
+                            src={avatar}
+                            className="w-full h-full object-cover rounded-full"
+                            alt=""
+                        />
                     </div>
                 )}
                 {username ? (

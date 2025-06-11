@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { ThumbsUpIcon, ShareIcon, UserIcon, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react'
+import { ThumbsUpIcon, ShareIcon, UserIcon, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -20,7 +20,6 @@ const ProductDetails = () => {
   // State cho bình luận
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([
-    // Bình luận mẫu ban đầu (có thể lấy từ API)
     {
       user: "test2",
       rating: 5,
@@ -28,7 +27,6 @@ const ProductDetails = () => {
       date: "27/05/2024 15:05",
     },
   ]);
-  // State cho đánh giá sao của người dùng
   const [userRating, setUserRating] = useState(5);
 
   // State cho yêu thích
@@ -62,7 +60,7 @@ const ProductDetails = () => {
     }
   };
 
-  // Hàm gửi bình luận
+  // Gửi bình luận
   const handleSendComment = () => {
     if (!comment.trim()) return;
     const now = new Date();
@@ -102,6 +100,14 @@ const ProductDetails = () => {
   }, [id]);
   // console.log('Product Detail:', productDetail);
 
+  useEffect(() => {
+    if (!productDetail) return;
+    // Kiểm tra nếu sách đã trong whitelist thì set isFavorite
+    const whitelistKey = `uploadedFiles_${user_id}`;
+    const currentWhitelist = JSON.parse(localStorage.getItem(whitelistKey)) || [];
+    setIsFavorite(currentWhitelist.some(item => item.id === productDetail.id));
+  }, [productDetail, user_id]);
+
   if (!productDetail) {
     return <p className="text-center mt-5 text-lg text-gray-500">Đang tải...</p>;
   }
@@ -139,53 +145,80 @@ const ProductDetails = () => {
       className="min-h-screen bg-slate-100 rounded mt-5"
     >
       {/* Lightbox modal */}
-      {lightboxOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <button
-            className="absolute top-6 right-8 text-white text-3xl hover:text-red-400"
-            onClick={() => setLightboxOpen(false)}
-            aria-label="Đóng"
+      <AnimatePresence>
+        {lightboxOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
           >
-            <X size={36} />
-          </button>
-          <button
-            className="absolute left-4 md:left-16 text-white text-4xl hover:text-emerald-400"
-            onClick={handlePrev}
-            aria-label="Trước"
-          >
-            <ChevronLeft size={48} />
-          </button>
-          <img
-            src={subImages[lightboxIndex]}
-            alt={`Ảnh phóng to ${lightboxIndex + 1}`}
-            className="max-h-[80vh] max-w-[90vw] rounded-lg shadow-2xl border-4 border-white"
-          />
-          <button
-            className="absolute right-4 md:right-16 text-white text-4xl hover:text-emerald-400"
-            onClick={handleNext}
-            aria-label="Sau"
-          >
-            <ChevronRight size={48} />
-          </button>
-        </div>
-      )}
+            <motion.button
+              whileHover={{ scale: 1.2, color: "#f87171" }}
+              className="absolute top-6 right-8 text-white text-3xl hover:text-red-400"
+              onClick={() => setLightboxOpen(false)}
+              aria-label="Đóng"
+            >
+              <X size={36} />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              className="absolute left-4 md:left-16 text-white text-4xl hover:text-emerald-400"
+              onClick={handlePrev}
+              aria-label="Trước"
+            >
+              <ChevronLeft size={48} />
+            </motion.button>
+            <motion.img
+              key={lightboxIndex}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              src={subImages[lightboxIndex]}
+              alt={`Ảnh phóng to ${lightboxIndex + 1}`}
+              className="max-h-[80vh] max-w-[90vw] rounded-lg shadow-2xl border-4 border-white"
+            />
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              className="absolute right-4 md:right-16 text-white text-4xl hover:text-emerald-400"
+              onClick={handleNext}
+              aria-label="Sau"
+            >
+              <ChevronRight size={48} />
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8 flex flex-col lg:flex-row gap-8">
         {/* Ảnh và ảnh phụ */}
-        <div className="w-full lg:w-1/2 flex flex-col items-center">
-          <img
+        <div className="w-full lg:w-[30%] flex flex-col items-center">
+          {/* Thông tin ở trên ảnh */}
+          <div className="flex gap-4 mb-4 text-blue-700 text-sm">
+            <span><UserIcon className="inline w-4 h-4 mr-1" /> Đã xem: <b>{productDetail.viewCount}</b></span>
+            <span><ThumbsUpIcon className="inline w-4 h-4 mr-1" /> Đã tải: <b>{productDetail.downloadCount}</b></span>
+            <span><ShareIcon className="inline w-4 h-4 mr-1" /> Còn lại: <b>{productDetail.in_stock}</b></span>
+          </div>
+          {/* Ảnh chính */}
+          <motion.img
             src={productDetail.fileUrl}
             alt={productDetail.title}
-            className="w-48 h-64 sm:w-64 sm:h-80 md:w-72 md:h-[350px] object-cover rounded-xl shadow-lg bg-blue-100"
+            className="w-72 h-72 sm:w-96 sm:h-[400px] md:w-[420px] md:h-[480px] object-cover rounded-xl shadow-lg bg-blue-100"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
           />
+          {/* Ảnh phụ */}
           <div className="flex justify-center gap-4 mt-4">
             {subImages.map((pic, idx) => (
-              <img
+              <motion.img
                 key={idx}
                 src={pic}
                 alt={`Ảnh phụ ${idx + 1}`}
-                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-blue-200 shadow bg-blue-50 cursor-pointer transition-transform hover:scale-105"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-blue-200 shadow bg-blue-50 cursor-pointer"
+                whileHover={{ scale: 1.1, boxShadow: "0px 4px 16px #2563eb33" }}
                 onClick={() => {
                   setLightboxIndex(idx);
                   setLightboxOpen(true);
@@ -193,48 +226,20 @@ const ProductDetails = () => {
               />
             ))}
           </div>
-          <div className="flex gap-4 mt-4 text-blue-700 text-sm">
-            <span><UserIcon className="inline w-4 h-4 mr-1" /> Đã xem: <b>{productDetail.viewCount}</b></span>
-            <span><ThumbsUpIcon className="inline w-4 h-4 mr-1" /> Đã tải: <b>{productDetail.downloadCount}</b></span>
-            <span><ShareIcon className="inline w-4 h-4 mr-1" /> Còn lại: <b>{productDetail.in_stock}</b></span>
-          </div>
-        </div>
-        {/* Thông tin chi tiết */}
-        <div
-          ref={pdfRef}
-          className="w-full lg:w-1/2 flex flex-col justify-center pl-0 lg:pl-6 mt-6 lg:mt-0 bg-white p-6 rounded-xl shadow-xl border border-blue-100"
-        >
-          <h2 className="text-3xl font-bold text-[#2563eb] mb-3">{productDetail.title}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-base sm:text-lg text-blue-900 mb-4">
-            <p><span className="font-semibold">Thể loại:</span>{" "}
-              {Array.isArray(productDetail.categoryIds) && productDetail.categoryIds.length > 0
-                ? productDetail.categoryIds.map(cat => cat.name).join(", ")
-                : "Đang cập nhật"}
-            </p>
-            <p><span className="font-semibold">Mã sản phẩm:</span> {productDetail.id_product || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Nhà cung cấp:</span> {productDetail.name_supplier || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Tác giả:</span> {productDetail.authorName || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Dịch giả:</span> {productDetail.translator || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Nhà xuất bản:</span> {productDetail.name_nxb || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Năm xuất bản:</span> {productDetail.publicationYear || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Ngôn ngữ:</span> {productDetail.language || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Trọng lượng:</span> {productDetail.weight ? productDetail.weight + "g" : "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Kích thước:</span> {productDetail.averageRating || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Số trang:</span> {productDetail.number_pages || "Đang cập nhật"}</p>
-            <p><span className="font-semibold">Số lượng còn lại:</span> {productDetail.in_stock || "Đang cập nhật"}</p>
-          </div>
-          <p className="text-base sm:text-lg text-blue-900 mb-4">
-            <span className="font-semibold">Mô tả:</span> {productDetail.description || "Đang cập nhật"}
-          </p>
-          <div className="flex gap-3 mt-4">
-            <button
+          {/* Nút Download và Tim ở dưới ảnh */}
+          <div className="flex gap-3 mt-6 w-full justify-center">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05, boxShadow: "0px 4px 16px #2563eb33" }}
               className="px-6 py-3 bg-gradient-to-r from-[#2563eb] to-[#60a5fa] text-white rounded-lg hover:from-[#1d4ed8] hover:to-[#3b82f6] transition font-semibold shadow"
               onClick={handleDownload}
             >
               Download
-            </button>
-            <button
-              className={`px-6 py-3 flex items-center justify-center bg-[#eaf1fb] rounded-lg hover:bg-[#dbeafe] transition shadow border border-blue-200`}
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9, rotate: -10 }}
+              whileHover={{ scale: 1.1 }}
+              className="px-6 py-3 flex items-center justify-center bg-[#eaf1fb] rounded-lg hover:bg-[#dbeafe] transition shadow border border-blue-200"
               onClick={handleWhitList}
             >
               <Heart
@@ -242,84 +247,139 @@ const ProductDetails = () => {
                 color={isFavorite ? "#ef4444" : "#2563eb"}
                 className="w-6 h-6"
               />
-            </button>
+            </motion.button>
           </div>
-          {showDownloadMsg && (
-            <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg z-50">
-              Download thành công!
-            </div>
-          )}
         </div>
-      </div>
-      {/* Bình luận mẫu */}
-      <div className="p-6 border-t bg-gray-50">
-        {/* Đánh giá sao */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="font-semibold text-blue-700">Đánh giá của bạn:</span>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              onClick={() => setUserRating(star)}
-              className="focus:outline-none"
-            >
-              <span
-                className={
-                  star <= userRating
-                    ? "text-yellow-400 text-2xl"
-                    : "text-gray-300 text-2xl"
-                }
-              >
-                ★
-              </span>
-            </button>
-          ))}
-          <span className="ml-2 text-blue-700 font-medium">{userRating} sao</span>
-        </div>
-        <textarea
-          className="w-full p-3 border rounded resize-none focus:ring-2 focus:ring-emerald-400"
-          placeholder="Viết bình luận..."
-          rows={3}
-          value={comment}
-          onChange={e => setComment(e.target.value)}
-        />
-        <div className="flex justify-end mt-2">
-          <button
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition font-semibold shadow"
-            onClick={handleSendComment}
+        {/* Thông tin chi tiết và đánh giá */}
+        <div className="w-full lg:w-[70%] flex flex-col">
+          <motion.div
+            ref={pdfRef}
+            className="flex-1 bg-white p-6 rounded-xl shadow-xl border border-blue-100"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            Gửi bình luận
-          </button>
-        </div>
-        <div className="mt-6 space-y-6">
-          {comments
-            .filter(cmt => cmt.rating >= 1)
-            .map((cmt, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <UserIcon className="w-4 h-4 text-gray-500" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{cmt.user}</span>
-                    <div className="flex">
-                      {"★★★★★".split("").map((star, i) => (
-                        <span
-                          key={i}
-                          className={
-                            i < cmt.rating ? "text-yellow-400" : "text-gray-300"
-                          }
-                        >
-                          {star}
-                        </span>
-                      ))}
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-3xl font-bold text-[#2563eb] mb-3"
+            >
+              {productDetail.title}
+            </motion.h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-base sm:text-lg text-blue-900 mb-4">
+              <p><span className="font-semibold">Thể loại:</span>{" "}
+                {Array.isArray(productDetail.categoryIds) && productDetail.categoryIds.length > 0
+                  ? productDetail.categoryIds.map(cat => cat.name).join(", ")
+                  : "Đang cập nhật"}
+              </p>
+              <p><span className="font-semibold">Mã sản phẩm:</span> {productDetail.id_product || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Nhà cung cấp:</span> {productDetail.name_supplier || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Tác giả:</span> {productDetail.authorName || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Dịch giả:</span> {productDetail.translator || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Nhà xuất bản:</span> {productDetail.name_nxb || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Năm xuất bản:</span> {productDetail.publicationYear || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Ngôn ngữ:</span> {productDetail.language || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Trọng lượng:</span> {productDetail.weight ? productDetail.weight + "g" : "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Kích thước:</span> {productDetail.averageRating || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Số trang:</span> {productDetail.number_pages || "Đang cập nhật"}</p>
+              <p><span className="font-semibold">Số lượng còn lại:</span> {productDetail.in_stock || "Đang cập nhật"}</p>
+            </div>
+            <p className="text-base sm:text-lg text-blue-900 mb-4">
+              <span className="font-semibold">Mô tả:</span> {productDetail.description || "Đang cập nhật"}
+            </p>
+            <AnimatePresence>
+              {showDownloadMsg && (
+                <motion.div
+                  initial={{ opacity: 0, y: -30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -30 }}
+                  className="fixed top-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg z-50"
+                >
+                  Download thành công!
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+          {/* Bình luận */}
+          <div className="p-6 border-t bg-gray-50 rounded-xl mt-6">
+            {/* Đánh giá sao */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-semibold text-blue-700">Đánh giá của bạn:</span>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setUserRating(star)}
+                  className="focus:outline-none"
+                >
+                  <span
+                    className={
+                      star <= userRating
+                        ? "text-yellow-400 text-2xl"
+                        : "text-gray-300 text-2xl"
+                    }
+                  >
+                    ★
+                  </span>
+                </button>
+              ))}
+              <span className="ml-2 text-blue-700 font-medium">{userRating} sao</span>
+            </div>
+            <textarea
+              className="w-full p-3 border rounded resize-none focus:ring-2 focus:ring-emerald-400"
+              placeholder="Viết bình luận..."
+              rows={3}
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+            />
+            <div className="flex justify-end mt-2">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition font-semibold shadow"
+                onClick={handleSendComment}
+              >
+                Gửi bình luận
+              </motion.button>
+            </div>
+            <div className="mt-6 space-y-6">
+              {comments
+                .filter(cmt => cmt.rating >= 1)
+                .map((cmt, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: 40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.07 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <UserIcon className="w-4 h-4 text-gray-500" />
                     </div>
-                    <span className="text-gray-500 text-sm">{cmt.date}</span>
-                  </div>
-                  <p className="text-gray-600 mt-1">{cmt.content}</p>
-                </div>
-              </div>
-            ))}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{cmt.user}</span>
+                        <div className="flex">
+                          {"★★★★★".split("").map((star, i) => (
+                            <span
+                              key={i}
+                              className={
+                                i < cmt.rating ? "text-yellow-400" : "text-gray-300"
+                              }
+                            >
+                              {star}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="text-gray-500 text-sm">{cmt.date}</span>
+                      </div>
+                      <p className="text-gray-600 mt-1">{cmt.content}</p>
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
